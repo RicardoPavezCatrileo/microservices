@@ -1,0 +1,117 @@
+Gestión de datos basada en eventos para microservicios
+microservicios
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+Descubrimiento de servicios en una arquitectura de microservicios
+Gestión de datos basada en eventos para microservicios (este artículo)
+Elegir una estrategia de implementación de microservicios
+Refactorizando un Monolito en Microservicios
+También puede descargar el conjunto completo de artículos, además de información sobre la implementación de microservicios utilizando NGINX Plus, como un libro electrónico: Microservicios: del diseño al despliegue . Y vea nuestra serie en la Arquitectura de Referencia de Microservicios y en la página de Soluciones de Microservicios .
+
+Este es el quinto artículo de una serie sobre la construcción de aplicaciones con microservicios. El primer artículo presenta el patrón de Arquitectura de Microservicios y analiza los beneficios y desventajas del uso de microservicios. El segundo y tercer artículos de la serie describen diferentes aspectos de la comunicación dentro de una arquitectura de microservicios. El cuarto artículo explora el problema estrechamente relacionado del descubrimiento de servicios. En este artículo, cambiamos de marcha y miramos los problemas de administración de datos distribuidos que surgen en una arquitectura de microservicios.
+
+Microservicios y el problema de la gestión distribuida de datos
+Una aplicación monolítica generalmente tiene una única base de datos relacional. Una ventaja clave del uso de una base de datos relacional es que su aplicación puede usar transacciones ACID , que brindan algunas garantías importantes:
+
+Atomicidad - Los cambios se hacen atómicamente
+Consistencia: el estado de la base de datos siempre es consistente
+Aislamiento: aunque las transacciones se ejecutan simultáneamente, parece que se ejecutan en serie
+Durabilidad: una vez que una transacción se ha comprometido, no se deshace
+Como resultado, su aplicación simplemente puede comenzar una transacción, cambiar (insertar, actualizar y eliminar) varias filas y confirmar la transacción.
+
+Otro gran beneficio de utilizar una base de datos relacional es que proporciona SQL, que es un lenguaje de consulta rico, declarativo y estandarizado. Puede escribir fácilmente una consulta que combine datos de múltiples tablas. El planificador de consultas RDBMS determina la forma más óptima de ejecutar la consulta. No tiene que preocuparse por los detalles de bajo nivel, como por ejemplo, cómo acceder a la base de datos. Y, como todos los datos de su aplicación están en una base de datos, es fácil consultarlos.
+
+Desafortunadamente, el acceso a los datos se vuelve mucho más complejo cuando pasamos a una arquitectura de microservicios. Esto se debe a que los datos que pertenecen a cada microservicio son privados para ese microservicio y solo se puede acceder a ellos a través de su API. El encapsulamiento de los datos garantiza que los microservicios se acoplen de manera flexible y puedan evolucionar independientemente el uno del otro. Si varios servicios acceden a los mismos datos, las actualizaciones de esquema requieren actualizaciones coordinadas que requieren mucho tiempo para todos los servicios.
+
+Para empeorar las cosas, los microservicios diferentes a menudo usan diferentes tipos de bases de datos. Las aplicaciones modernas almacenan y procesan diversos tipos de datos y una base de datos relacional no siempre es la mejor opción. Para algunos casos de uso, una base de datos NoSQL particular podría tener un modelo de datos más conveniente y ofrecer un mejor rendimiento y escalabilidad. Por ejemplo, tiene sentido que un servicio que almacena y consulta texto use un motor de búsqueda de texto como Elasticsearch. De manera similar, un servicio que almacena datos de gráficos sociales probablemente debería usar una base de datos de gráficos, como Neo4j. En consecuencia, las aplicaciones basadas en microservicios a menudo usan una mezcla de bases de datos SQL y NoSQL, el llamado enfoque de persistencia políglota .
+
+Una arquitectura particionada y persistente en políglotas para el almacenamiento de datos tiene muchos beneficios, incluidos los servicios débilmente acoplados y un mejor rendimiento y escalabilidad. Sin embargo, introduce algunos desafíos de administración de datos distribuidos.
+
+El primer desafío es cómo implementar transacciones comerciales que mantengan la coherencia entre múltiples servicios. Para ver por qué esto es un problema, echemos un vistazo a un ejemplo de una tienda B2B en línea. El Servicio al cliente mantiene información sobre los clientes, incluidas sus líneas de crédito. El Servicio de pedidos administra los pedidos y debe verificar que un nuevo pedido no exceda el límite de crédito del cliente. En la versión monolítica de esta aplicación, el Servicio de pedidos puede simplemente usar una transacción ACID para verificar el crédito disponible y crear el pedido.
+
+Por el contrario, en una arquitectura de microservicios, las tablas ORDER y CUSTOMER son privadas para sus respectivos servicios, como se muestra en el siguiente diagrama.
+
+Cada servicio en una arquitectura de microservicios mantiene una tabla de base de datos privada
+
+El servicio de pedidos no puede acceder directamente a la tabla CLIENTE. Solo puede usar la API provista por el Servicio al Cliente. El Servicio de pedidos podría utilizar transacciones distribuidas , también conocido como confirmación de dos fases (2PC). Sin embargo, 2PC generalmente no es una opción viable en aplicaciones modernas. El teorema CAP requiere que elija entre la disponibilidad y la consistencia del estilo ACID, y la disponibilidad suele ser la mejor opción. Además, muchas tecnologías modernas, como la mayoría de las bases de datos NoSQL, no son compatibles con 2PC. Mantener la coherencia de los datos en todos los servicios y bases de datos es esencial, por lo que necesitamos otra solución.
+
+El segundo desafío es cómo implementar consultas que recuperen datos de múltiples servicios. Por ejemplo, imaginemos que la aplicación necesita mostrar un cliente y sus pedidos recientes. Si el Servicio de pedidos proporciona una API para recuperar los pedidos de un cliente, puede recuperar estos datos mediante una combinación de aplicaciones. La aplicación recupera al cliente del Servicio al Cliente y las órdenes del cliente del Servicio de Pedido. Supongamos, sin embargo, que el servicio de pedidos solo admite la búsqueda de pedidos por su clave principal (quizás utiliza una base de datos NoSQL que solo admite recuperaciones basadas en claves primarias). En esta situación, no hay una forma obvia de recuperar los datos necesarios.
+
+Arquitectura orientada a eventos
+Para muchas aplicaciones, la solución es usar una arquitectura basada en eventos . En esta arquitectura, un microservicio publica un evento cuando sucede algo notable, como cuando actualiza una entidad comercial. Otros microservicios se suscriben a esos eventos. Cuando un microservicio recibe un evento, puede actualizar sus propias entidades comerciales, lo que puede llevar a la publicación de más eventos.
+
+Puede usar eventos para implementar transacciones comerciales que abarcan múltiples servicios. Una transacción consiste en una serie de pasos. Cada paso consiste en un microservicio que actualiza una entidad comercial y publica un evento que desencadena el siguiente paso. La siguiente secuencia de diagramas muestra cómo puede usar un enfoque basado en eventos para verificar el crédito disponible al crear una orden. Los microservicios intercambian eventos a través de Message Broker.
+
+El servicio de pedidos crea un pedido con estado NUEVO y publica un evento de creación de pedido.
+
+En el paso 1 de una verificación de crédito en una arquitectura de microservicios, Order Service publica un evento 'Order Created'
+El Servicio al cliente consume el evento Order Created, reserva el crédito para el pedido y publica un evento de crédito reservado.
+
+En una arquitectura de microservicios, el segundo paso en una verificación de crédito es que el Servicio al cliente genere un evento de 'Reserva de crédito'
+
+El servicio de pedidos consume el evento de reserva de crédito y cambia el estado de la orden para ABRIR.
+
+En una arquitectura de microservicios, el tercer paso en una verificación de crédito es que el Servicio de pedidos establezca el estado del pedido en 'Abrir'
+
+Un escenario más complejo podría implicar pasos adicionales, como reservar inventario al mismo tiempo que se verifica el crédito del cliente.
+
+Siempre que (a) cada servicio actualice atómicamente la base de datos y publique un evento -más sobre eso más adelante- y (b) Message Broker garantiza que los eventos se entregan al menos una vez, entonces usted puede implementar transacciones comerciales que abarquen múltiples servicios. Es importante tener en cuenta que estas no son transacciones ACID. Ofrecen garantías mucho más débiles, como la consistencia eventual . Este modelo de transacción se conoce como el modelo BASE .
+
+También puede usar eventos para mantener vistas materializadas que unen previamente datos propiedad de múltiples microservicios. El servicio que mantiene la vista se suscribe a los eventos relevantes y actualiza la vista. Por ejemplo, el Servicio de actualización de vista de pedidos del cliente que mantiene una vista de Pedidos de clientes se suscribe a los eventos publicados por el Servicio de atención al cliente y el Servicio de pedidos.
+
+En una arquitectura de microservicios, un servicio puede suscribirse a notificaciones de eventos publicadas por otros servicios como desencadenantes de acción.
+
+Cuando el Servicio de actualización de la vista del pedido del cliente recibe un evento de Cliente o Pedido, actualiza el almacén de datos de la Vista del pedido del cliente. Puede implementar la Vista de pedidos del cliente utilizando una base de datos documental como MongoDB y almacenar un documento para cada Cliente. El servicio de consulta de vista de pedidos del cliente maneja las solicitudes de un cliente y las órdenes recientes al consultar el almacén de datos de vista de pedidos del cliente.
+
+Una arquitectura impulsada por eventos tiene varios beneficios y desventajas. Permite la implementación de transacciones que abarcan múltiples servicios y proporcionan consistencia eventual. Otro beneficio es que también permite que una aplicación mantenga vistas materializadas. Una desventaja es que el modelo de programación es más complejo que cuando se usan transacciones ACID. A menudo debe implementar transacciones de compensación para recuperarse de fallas en el nivel de la aplicación; por ejemplo, debe cancelar un pedido si falla la verificación de crédito. Además, las aplicaciones deben tratar con datos inconsistentes. Eso es porque los cambios hechos por las transacciones en vuelo son visibles. La aplicación también puede ver incoherencias si se lee desde una vista materializada que aún no se ha actualizado. Otro inconveniente es que los suscriptores deben detectar e ignorar eventos duplicados.
+
+Alcanzando la Atomicidad
+En una arquitectura basada en eventos también existe el problema de actualizar atómicamente la base de datos y publicar un evento. Por ejemplo, Order Service debe insertar una fila en la tabla ORDER y publicar un evento Order Created. Es esencial que estas dos operaciones se hagan atómicamente. Si el servicio falla después de actualizar la base de datos pero antes de publicar el evento, el sistema se vuelve inconsistente. La forma estándar de garantizar la atomicidad es usar una transacción distribuida que involucre la base de datos y Message Broker. Sin embargo, por las razones descritas anteriormente, como el teorema CAP, esto es exactamente lo que no queremos hacer.
+
+Publicación de eventos utilizando transacciones locales
+Una forma de lograr la atomicidad es que la aplicación publique eventos usando un proceso de varios pasos que solo involucra transacciones locales . El truco es tener una tabla EVENT, que funciona como una cola de mensajes, en la base de datos que almacena el estado de las entidades comerciales. La aplicación comienza una transacción de base de datos (local), actualiza el estado de las entidades comerciales, inserta un evento en la tabla EVENT y confirma la transacción. Un subproceso o proceso de aplicación diferente consulta la tabla EVENT, publica los eventos en Message Broker y luego utiliza una transacción local para marcar los eventos como publicados. El siguiente diagrama muestra el diseño.
+
+En una arquitectura de microservicios, logre la atomicidad utilizando solo transacciones locales para publicar eventos
+
+El servicio de pedidos inserta una fila en la tabla ORDER e inserta un evento Order Created en la tabla EVENT. El proceso o el subproceso de Event Publisher consulta la tabla EVENT para eventos no publicados, publica los eventos y luego actualiza la tabla EVENT para marcar los eventos como publicados.
+
+Este enfoque tiene varios beneficios y desventajas. Un beneficio es que garantiza que se publique un evento para cada actualización sin depender de 2PC. Además, la aplicación publica eventos de nivel empresarial, lo que elimina la necesidad de inferirlos. Una desventaja de este enfoque es que es potencialmente propenso a errores ya que el desarrollador debe recordar publicar eventos. Una limitación de este enfoque es que es difícil de implementar cuando se utilizan algunas bases de datos NoSQL debido a sus capacidades limitadas de transacción y consulta.
+
+Este enfoque elimina la necesidad de 2PC haciendo que la aplicación use transacciones locales para actualizar el estado y publicar eventos. Veamos ahora un enfoque que logra la atomicidad al hacer que la aplicación simplemente actualice el estado.
+
+Minería de un registro de transacción de base de datos
+Otra forma de lograr la atomicidad sin 2PC es que los eventos se publiquen mediante un hilo o proceso que explote la transacción de la base de datos o el registro de compromiso. La aplicación actualiza la base de datos, lo que da como resultado que los cambios se registren en el registro de transacciones de la base de datos. El subproceso o proceso Miner de registro de transacciones lee el registro de transacciones y publica eventos en Message Broker. El siguiente diagrama muestra el diseño.
+
+En una arquitectura de microservicios, logre la atomicidad extrayendo el registro de transacciones para eventos
+
+Un ejemplo de este enfoque es el proyecto de fuente abierta LinkedIn Databus . Databus extrae el registro de transacciones de Oracle y publica eventos correspondientes a los cambios. LinkedIn utiliza Databus para mantener varios almacenes de datos derivados consistentes con el sistema de registro.
+
+Otro ejemplo es el mecanismo de secuencias en AWS DynamoDB , que es una base de datos NoSQL administrada. Una secuencia de DynamoDB contiene la secuencia de cambios ordenados por tiempo (operaciones de creación, actualización y eliminación) realizadas a los elementos en una tabla de DynamoDB en las últimas 24 horas. Una aplicación puede leer esos cambios desde la transmisión y, por ejemplo, publicarlos como eventos.
+
+La extracción de registros de transacciones tiene varios beneficios y desventajas. Un beneficio es que garantiza que se publique un evento para cada actualización sin usar 2PC. La extracción de registros de transacciones también puede simplificar la aplicación al separar la publicación de eventos de la lógica comercial de la aplicación. Un inconveniente importante es que el formato del registro de transacciones es propiedad de cada base de datos e incluso puede cambiar entre las versiones de la base de datos. Además, puede ser difícil aplicar ingeniería inversa a los eventos comerciales de alto nivel a partir de las actualizaciones de bajo nivel registradas en el registro de transacciones.
+
+La minería de registros de transacciones elimina la necesidad de 2PC al hacer que la aplicación haga una cosa: actualizar la base de datos. Veamos ahora un enfoque diferente que elimina las actualizaciones y depende únicamente de los eventos.
+
+Uso de Event Sourcing
+El aprovisionamiento de eventos logra atomicidad sin 2PC mediante el uso de un enfoque radicalmente diferente, centrado en el evento para entidades comerciales persistentes. En lugar de almacenar el estado actual de una entidad, la aplicación almacena una secuencia de eventos que cambian el estado. La aplicación reconstruye el estado actual de una entidad al reproducir los eventos. Cada vez que cambia el estado de una entidad comercial, se agrega un nuevo evento a la lista de eventos. Como guardar un evento es una operación única, es intrínsecamente atómico.
+
+Para ver cómo funciona el abastecimiento de eventos, considere la entidad Order como un ejemplo. En un enfoque tradicional, cada orden se asigna a una fila en una tabla ORDER y a filas en, por ejemplo, una tabla ORDER_LINE_ITEM. Pero cuando se utiliza el abastecimiento de eventos, el Servicio de pedidos almacena un pedido en forma de eventos que cambian el estado: Creado, Aprobado, Enviado, Cancelado. Cada evento contiene datos suficientes para reconstruir el estado del pedido.
+
+En una arquitectura de microservicios, logre la atomicidad con el aprovisionamiento de eventos
+
+Los eventos persisten en una tienda de eventos, que es una base de datos de eventos. La tienda tiene una API para agregar y recuperar eventos de una entidad. Event Store también se comporta como Message Broker en las arquitecturas que describimos anteriormente. Proporciona una API que permite que los servicios se suscriban a eventos. Event Store ofrece todos los eventos a todos los suscriptores interesados. Event Store es la columna vertebral de una arquitectura de microservicios impulsada por eventos.
+
+El abastecimiento de eventos tiene varios beneficios. Resuelve uno de los problemas clave en la implementación de una arquitectura basada en eventos y hace posible publicar eventos de manera confiable cada vez que cambia el estado. Como resultado, resuelve problemas de coherencia de datos en una arquitectura de microservicios. Además, dado que persiste eventos en lugar de objetos de dominio, en su mayoría evita el problema de desajuste de impedancia relacional de objeto. El abastecimiento de eventos también proporciona un registro de auditoría 100% confiable de los cambios realizados en una entidad comercial, y hace posible implementar consultas temporales que determinan el estado de una entidad en cualquier momento. Otro beneficio importante del abastecimiento de eventos es que su lógica de negocios consiste en entidades de negocios débilmente conectadas que intercambian eventos. Esto hace que sea mucho más fácil migrar de una aplicación monolítica a una arquitectura de microservicios.
+
+La contratación de eventos también tiene algunos inconvenientes. Es un estilo de programación diferente y desconocido, por lo que hay una curva de aprendizaje. La tienda de eventos solo admite directamente la búsqueda de entidades comerciales por clave principal. Debe usar la segregación de responsabilidad de consulta de comando (CQRS) para implementar consultas. Como resultado, las aplicaciones deben manejar datos coherentes con el tiempo.
+
+Resumen
+En una arquitectura de microservicios, cada microservicio tiene su propio almacén de datos privado. Diferentes microservicios pueden usar diferentes bases de datos SQL y NoSQL. Si bien esta arquitectura de base de datos tiene beneficios significativos, crea algunos desafíos de administración de datos distribuidos. El primer desafío es cómo implementar transacciones comerciales que mantengan la coherencia entre múltiples servicios. El segundo desafío es cómo implementar consultas que recuperen datos de múltiples servicios.
+
+Para muchas aplicaciones, la solución es usar una arquitectura basada en eventos. Un desafío con la implementación de una arquitectura basada en eventos es cómo actualizar atómicamente el estado y cómo publicar eventos. Hay algunas maneras de lograr esto, incluido el uso de la base de datos como cola de mensajes, extracción de registros de transacciones y obtención de eventos.
+
+En futuras publicaciones de blog, continuaremos profundizando en otros aspectos de microservicios.

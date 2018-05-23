@@ -1,0 +1,96 @@
+Refactorizando un Monolito en Microservicios
+microservicios , aplicación monolítica , refactorización , descubrimiento de servicios , comunicación entre procesos (IPC)
+
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+Descubrimiento de servicios en una arquitectura de microservicios
+Gestión de datos basada en eventos para microservicios
+Elegir una estrategia de implementación de microservicios
+Refactorizando un Monolito en Microservicios (este artículo)
+
+También puede descargar el conjunto completo de artículos, además de información sobre la implementación de microservicios utilizando NGINX Plus, como un libro electrónico: Microservicios: del diseño al despliegue . Y vea nuestra serie en la Arquitectura de Referencia de Microservicios y en la página de Soluciones de Microservicios .
+
+Este es el séptimo y último artículo de mi serie sobre la construcción de aplicaciones con microservicios. El primer artículo presenta el patrón de Arquitectura de Microservicios y analiza los beneficios y desventajas del uso de microservicios. Los siguientes artículos discuten diferentes aspectos de la arquitectura de microservicios: uso de una puerta de enlace API , comunicación entre procesos , descubrimiento de servicios , gestión de datos basada en eventos e implementación de microservicios . En este artículo, analizamos estrategias para migrar una aplicación monolítica a microservicios.
+
+Espero que esta serie de artículos le haya dado una buena comprensión de la arquitectura de microservicios, sus beneficios y desventajas, y cuándo usarla. Tal vez la arquitectura de microservicios sea adecuada para su organización.
+
+Sin embargo, hay muchas posibilidades de que esté trabajando en una aplicación monolítica grande y compleja. Su experiencia diaria de desarrollar y desplegar su aplicación es lenta y dolorosa. Los microservicios parecen un nirvana distante. Afortunadamente, hay estrategias que puedes usar para escapar del infierno monolítico. En este artículo, describo cómo refactorizar incrementalmente una aplicación monolítica en un conjunto de microservicios.
+
+Descripción general de refactorización a microservicios
+El proceso de transformar una aplicación monolítica en microservicios es una forma de modernización de la aplicación . Eso es algo que los desarrolladores han estado haciendo durante décadas. Como resultado, hay algunas ideas que podemos reutilizar al refacturar una aplicación en microservicios.
+
+Una estrategia para no usar es la reescritura de "Big Bang". Es entonces cuando enfoca todos sus esfuerzos de desarrollo en la construcción de una nueva aplicación basada en microservicios desde cero. Aunque suena atractivo, es extremadamente arriesgado y probablemente terminará en fracaso. Como dijo Martin Fowler , "lo único que garantiza una reescritura de Big Bang es un Big Bang".
+
+En lugar de una reescritura de Big Bang, debería refactorizar incrementalmente su aplicación monolítica. Gradualmente creas una nueva aplicación que consiste en microservicios y la ejecutas junto con tu aplicación monolítica. Con el tiempo, la cantidad de funcionalidad implementada por la aplicación monolítica se reduce hasta que desaparece por completo o se convierte en otro microservicio. Esta estrategia es similar al servicio de su automóvil mientras conduce por la carretera a 70 mph - desafiante, pero mucho menos arriesgado que intentar una reescritura del Big Bang.
+
+Martin Fowler se refiere a esta estrategia de modernización de aplicaciones como la aplicación Strangler . El nombre proviene de la vid estranguladora (también conocida como estrangulador)) que se encuentra en las selvas tropicales. Una vid estranguladora crece alrededor de un árbol para alcanzar la luz del sol sobre el dosel del bosque. A veces, el árbol muere, dejando una enredadera en forma de árbol. La modernización de aplicaciones sigue el mismo patrón. Desarrollaremos una nueva aplicación que consiste en microservicios alrededor de la aplicación heredada, que eventualmente morirá.
+
+El higo estrangulador es una metáfora para construir una arquitectura de microservicios que imita las funciones de un monolito y eventualmente lo reemplaza [Richardson microservices reference architecture]
+
+Veamos diferentes estrategias para hacer esto.
+
+Estrategia 1 - Deje de cavar
+La Ley de Holes dice que cuando estés en un hoyo deberías dejar de cavar. Este es un gran consejo para seguir cuando su aplicación monolítica se ha vuelto inmanejable. En otras palabras, deberías dejar de hacer el monolito más grande. Esto significa que cuando implemente nuevas funcionalidades, no debería agregar más código al monolito. En cambio, la gran idea con esta estrategia es poner ese nuevo código en un microservicio independiente. El siguiente diagrama muestra la arquitectura del sistema después de aplicar este enfoque.
+
+Para comenzar a migrar de un monolito a una arquitectura de microservicios, implemente nuevas funcionalidades como microservicios;  continúe las solicitudes de enrutamiento para la funcionalidad heredada del monolito hasta que haya un microservicio de reemplazo [Richardson microservices hace referencia a la arquitectura]
+
+Además del nuevo servicio y el monolito heredado, existen otros dos componentes. El primero es un enrutador de solicitud, que maneja las solicitudes entrantes (HTTP). Es similar a la puerta de enlace API descrita en un artículo anterior . El enrutador envía las solicitudes correspondientes a la nueva funcionalidad al nuevo servicio. Enlaza las solicitudes heredadas al monolito.
+
+El otro componente es el código de pegamento, que integra el servicio con el monolito. Un servicio raramente existe aislado y a menudo necesita acceder a los datos propiedad del monolito. El código de pegamento, que reside en el monolito, el servicio o ambos, es responsable de la integración de datos. El servicio usa el código de pegamento para leer y escribir datos propiedad del monolito.
+
+Hay tres estrategias que un servicio puede usar para acceder a los datos del monolito:
+
+Invoque una API remota proporcionada por el monolito
+Acceda a la base de datos del monolito directamente
+Mantenga su propia copia de los datos, que se sincroniza con la base de datos del monolito
+El código de pegamento a veces se denomina capa anticorrupción . Esto se debe a que el código de pegamento impide que el servicio, que tiene su propio modelo de dominio prístino, se contamine por conceptos del modelo de dominio del monolito heredado. El código de pegamento se traduce entre los dos modelos diferentes. El término capa anticorrupción apareció por primera vez en el libro must-read Domain Driven Design de Eric Evans y luego fue refinado en un libro blanco . Desarrollar una capa anticorrupción puede ser una tarea no trivial. Pero es esencial crear uno si quieres crecer para salir del infierno monolítico.
+
+Implementar nuevas funcionalidades como un servicio liviano tiene un par de beneficios. Evita que el monolito se vuelva aún más inmanejable. El servicio se puede desarrollar, implementar y escalar independientemente del monolito. Experimenta los beneficios de la arquitectura de microservicios para cada nuevo servicio que cree.
+
+Sin embargo, este enfoque no hace nada para abordar los problemas con el monolito. Para solucionar esos problemas necesitas romper el monolito. Veamos estrategias para hacer eso.
+
+Estrategia 2: frontend y backend divididos
+Una estrategia que reduce la aplicación monolítica es dividir la capa de presentación de la lógica comercial y las capas de acceso a los datos. Una aplicación empresarial típica consta de al menos tres tipos diferentes de componentes:
+
+Capa de presentación: componentes que manejan solicitudes HTTP e implementan una API (REST) ??o una interfaz de usuario web basada en HTML. En una aplicación que tiene una interfaz de usuario sofisticada, el nivel de presentación suele ser un cuerpo sustancial de código.
+Capa de lógica de negocios: componentes que son el núcleo de la aplicación e implementa las reglas de negocios.
+Capa de acceso a datos: componentes que acceden a los componentes de la infraestructura, como las bases de datos y los intermediarios de mensajes.
+Por lo general, existe una separación clara entre la lógica de presentación por un lado y la lógica comercial y de acceso a datos por el otro. El nivel de negocio tiene una API de grano grueso que consta de una o más fachadas, que encapsulan componentes de lógica empresarial. Esta API es una costura natural a lo largo de la cual puedes dividir el monolito en dos aplicaciones más pequeñas. Una aplicación contiene la capa de presentación. La otra aplicación contiene la lógica comercial y de acceso a datos. Después de la división, la aplicación de lógica de presentación hace llamadas remotas a la aplicación de lógica de negocios. El siguiente diagrama muestra la arquitectura antes y después de la refactorización.
+
+Refactorice un monolito en dos aplicaciones: una para la lógica de presentación y otra para la lógica empresarial y de acceso a los datos [Richardson microservices reference architecture]
+
+Dividir un monolito de esta manera tiene dos beneficios principales. Le permite desarrollar, implementar y escalar las dos aplicaciones independientemente una de la otra. En particular, permite a los desarrolladores de la capa de presentación iterar rápidamente en la interfaz del usuario y realizar fácilmente pruebas A / B, por ejemplo. Otro beneficio de este enfoque es que expone una API remota que puede ser invocada por los microservicios que usted desarrolla.
+
+Esta estrategia, sin embargo, es solo una solución parcial. Es muy probable que una o ambas aplicaciones sean un monolito inmanejable. Debe usar la tercera estrategia para eliminar el monolito o monolitos restantes.
+
+Estrategia 3 - Servicios de extracción
+La tercera estrategia de refactorización es convertir los módulos existentes dentro del monolito en microservicios independientes. Cada vez que extrae un módulo y lo convierte en un servicio, el monolito se reduce. Una vez que haya convertido suficientes módulos, el monolito dejará de ser un problema. O desaparece por completo o se vuelve lo suficientemente pequeño como para ser solo otro servicio.
+
+Priorizar qué módulos convertir en servicios
+Una aplicación monolítica grande y compleja consiste en decenas o cientos de módulos, todos los cuales son candidatos para la extracción. Averiguar qué módulos convertir primero es a menudo desafiante. Un buen enfoque es comenzar con unos pocos módulos que son fáciles de extraer. Esto le dará experiencia con microservicios en general y el proceso de extracción en particular. Después de eso, debes extraer los módulos que te darán el mayor beneficio.
+
+Convertir un módulo en un servicio generalmente requiere mucho tiempo. Desea clasificar los módulos por el beneficio que recibirá. Por lo general, es beneficioso extraer módulos que cambian con frecuencia. Una vez que haya convertido un módulo en un servicio, puede desarrollarlo e implementarlo independientemente del monolito, lo que acelerará el desarrollo.
+
+También es beneficioso extraer módulos que tengan requisitos de recursos significativamente diferentes a los del resto del monolito. Es útil, por ejemplo, convertir un módulo que tiene una base de datos en memoria en un servicio, que luego se puede implementar en hosts con grandes cantidades de memoria. Del mismo modo, puede valer la pena extraer módulos que implementen algoritmos computacionalmente costosos, ya que el servicio se puede implementar en hosts con muchas CPU. Al convertir los módulos con requerimientos de recursos particulares en servicios, puede hacer que su aplicación sea mucho más fácil de escalar.
+
+Al determinar qué módulos extraer, es útil buscar los límites de grano grueso existentes (también conocidos como costuras). Facilitan y abaratan la conversión de módulos en servicios. Un ejemplo de dicho límite es un módulo que solo se comunica con el resto de la aplicación a través de mensajes asíncronos. Puede ser relativamente barato y fácil convertir ese módulo en un microservicio.
+
+Cómo extraer un módulo
+El primer paso para extraer un módulo es definir una interfaz de grano grueso entre el módulo y el monolito. Es más probable que sea una API bidireccional, ya que el monolito necesitará datos propiedad del servicio y viceversa. A menudo es un reto implementar tal API debido a las dependencias enredadas y los patrones de interacción de granularidad entre el módulo y el resto de la aplicación. La lógica empresarial implementada utilizando el patrón del modelo de dominio es especialmente desafiante para la refactorización debido a las numerosas asociaciones entre las clases de modelo de dominio. A menudo tendrá que hacer cambios significativos en el código para romper estas dependencias. El siguiente diagrama muestra la refactorización.
+
+Una vez que implemente la interfaz de grano grueso, entonces convierta el módulo en un servicio autónomo. Para hacerlo, debe escribir código para permitir que el monolito y el servicio se comuniquen a través de una API que utiliza un mecanismo de comunicación entre procesos (IPC). El siguiente diagrama muestra la arquitectura antes, durante y después de la refactorización.
+
+Extraiga un módulo / microservicio de un monolito definiendo una interfaz de granularidad gruesa entre el módulo y el monolito [Richardson microservices reference architecture]
+
+En este ejemplo, el Módulo Z es el módulo candidato para extraer. Sus componentes son utilizados por el Módulo X y utiliza el Módulo Y. El primer paso de refactorización es definir un par de API de grano grueso. La primera interfaz es una interfaz entrante que utiliza el Módulo X para invocar el Módulo Z. La segunda es una interfaz de salida utilizada por el Módulo Z para invocar el Módulo Y.
+
+El segundo paso de refactorización convierte el módulo en un servicio independiente. Las interfaces de entrada y de salida se implementan por código que usa un mecanismo de IPC. Lo más probable es que necesite construir el servicio combinando el Módulo Z con un marco de chasis de microservicio que maneja problemas transversales como el descubrimiento de servicios.
+
+Una vez que haya extraído un módulo, tiene otro servicio que puede desarrollarse, implementarse y ampliarse independientemente del monolito y de cualquier otro servicio. Incluso puede reescribir el servicio desde cero; en este caso, el código API que integra el servicio con el monolito se convierte en una capa anticorrupción que se traduce entre los dos modelos de dominio. Cada vez que extrae un servicio, da un paso más en la dirección de microservicios. Con el tiempo, el monolito se reducirá y tendrá un número creciente de microservicios.
+
+Resumen
+El proceso de migrar una aplicación existente a microservicios es una forma de modernización de la aplicación. No debe pasar a microservicios reescribiendo su aplicación desde cero. En cambio, debe refactorizar gradualmente su aplicación en un conjunto de microservicios. Hay tres estrategias que puede usar: implementar nuevas funcionalidades como microservicios; dividir los componentes de presentación de los componentes de negocio y acceso a datos; y convertir módulos existentes en el monolito en servicios. Con el tiempo crecerá la cantidad de microservicios y aumentará la agilidad y la velocidad de su equipo de desarrollo.

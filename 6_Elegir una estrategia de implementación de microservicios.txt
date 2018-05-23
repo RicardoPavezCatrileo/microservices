@@ -1,0 +1,123 @@
+Elegir una estrategia de implementación de microservicios
+microservicios , aplicación monolítica , descubrimiento de servicios , comunicación entre procesos (IPC) , Docker , patrón
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+Descubrimiento de servicios en una arquitectura de microservicios
+Gestión de datos basada en eventos para microservicios
+Elegir una estrategia de implementación de microservicios (este artículo)
+Refactorizando un Monolito en Microservicios
+
+También puede descargar el conjunto completo de artículos, además de información sobre la implementación de microservicios utilizando NGINX Plus, como un libro electrónico: Microservicios: del diseño al despliegue . Y vea nuestra serie en la Arquitectura de Referencia de Microservicios y en la página de Soluciones de Microservicios .
+
+Este es el sexto artículo de una serie sobre la construcción de aplicaciones con microservicios. El primer artículo presenta el patrón de Arquitectura de Microservicios y analiza los beneficios y desventajas del uso de microservicios. Los siguientes artículos discuten diferentes aspectos de la arquitectura de microservicios: uso de una API Gateway , comunicación entre procesos , descubrimiento de servicios y gestión de datos basada en eventos . En este artículo, analizamos estrategias para implementar microservicios.
+
+Motivaciones
+Implementar una aplicación monolítica significa ejecutar copias múltiples e idénticas de una única aplicación, por lo general de gran tamaño. Por lo general, aprovisiona servidores N (físicos o virtuales) y ejecuta M instancias de la aplicación en cada uno. La implementación de una aplicación monolítica no siempre es completamente sencilla, pero es mucho más simple que implementar una aplicación de microservicios.
+
+Una aplicación de microservicios consiste en decenas o incluso cientos de servicios. Los servicios están escritos en una variedad de idiomas y marcos. Cada uno es una mini aplicación con sus propios requisitos específicos de implementación, recursos, escalado y monitoreo. Por ejemplo, necesita ejecutar una cierta cantidad de instancias de cada servicio en función de la demanda de ese servicio. Además, cada instancia de servicio debe proporcionarse con la CPU, la memoria y los recursos de E / S apropiados. Lo que es aún más desafiante es que a pesar de esta complejidad, la implementación de servicios debe ser rápida, confiable y rentable.
+
+Hay algunos patrones de implementación de microservicio diferentes. Veamos primero las instancias de servicios múltiples por patrón de host.
+
+Múltiples instancias de servicio por patrón de host
+Una forma de implementar sus microservicios es usar las instancias de servicios múltiples por patrón de host . Al utilizar este patrón, aprovisiona uno o más hosts físicos o virtuales y ejecuta múltiples instancias de servicio en cada uno. En muchos sentidos, este es el enfoque tradicional para la implementación de aplicaciones. Cada instancia de servicio se ejecuta en un puerto conocido en uno o más hosts. Las máquinas host son comúnmente tratadas como mascotas .
+
+El siguiente diagrama muestra la estructura de este patrón.
+
+sLas instancias de servicio múltiple por patrón de host para implementar aplicaciones basadas en arquitectura de microservicios
+
+Hay un par de variantes de este patrón. Una variante es que cada instancia de servicio sea un proceso o un grupo de procesos. Por ejemplo, puede implementar una instancia de servicio Java como una aplicación web en un servidor Apache Tomcat . Una instancia de servicio Node.js puede consistir en un proceso principal y uno o más procesos secundarios.
+
+La otra variante de este patrón es ejecutar varias instancias de servicio en el mismo proceso o grupo de procesos. Por ejemplo, puede implementar múltiples aplicaciones web Java en el mismo servidor Apache Tomcat o ejecutar múltiples paquetes OSGI en el mismo contenedor OSGI.
+
+Las instancias de servicios múltiples por patrón de host tienen ventajas y desventajas. Un beneficio importante es que su uso de recursos es relativamente eficiente. Varias instancias de servicio comparten el servidor y su sistema operativo. Es incluso más eficiente si un proceso o grupo de procesos ejecuta múltiples instancias de servicio, por ejemplo, múltiples aplicaciones web que comparten el mismo servidor Apache Tomcat y JVM.
+
+Otro beneficio de este patrón es que la implementación de una instancia de servicio es relativamente rápida. Simplemente copie el servicio en un host e inícielo. Si el servicio está escrito en Java, copie un archivo JAR o WAR. Para otros idiomas, como Node.js o Ruby, copie el código fuente. En cualquier caso, el número de bytes copiados a través de la red es relativamente pequeño.
+
+Además, debido a la falta de gastos generales, comenzar un servicio suele ser muy rápido. Si el servicio es su propio proceso, simplemente comienza. De lo contrario, si el servicio es una de varias instancias que se ejecuta en el mismo proceso de contenedor o grupo de proceso, usted lo despliega dinámicamente en el contenedor o reinicia el contenedor.
+
+A pesar de su atractivo, las Instancias de servicios múltiples por patrón de host tienen algunos inconvenientes importantes. Una desventaja principal es que hay poco o ningún aislamiento de las instancias de servicio, a menos que cada instancia de servicio sea un proceso separado. Si bien puede controlar con precisión la utilización de los recursos de cada instancia de servicio, no puede limitar los recursos que utiliza cada instancia. Es posible que una instancia de servicio que funciona mal consuma toda la memoria o CPU del host.
+
+No hay aislamiento en absoluto si se ejecutan varias instancias de servicio en el mismo proceso. Todas las instancias pueden, por ejemplo, compartir el mismo montón de JVM. Una instancia de servicio que funciona mal podría romper fácilmente los otros servicios que se ejecutan en el mismo proceso. Además, no tiene forma de supervisar los recursos utilizados por cada instancia de servicio.
+
+Otro problema importante con este enfoque es que el equipo de operaciones que implementa un servicio debe conocer los detalles específicos de cómo hacerlo. Los servicios se pueden escribir en una variedad de idiomas y marcos, por lo que hay muchos detalles que el equipo de desarrollo debe compartir con las operaciones. Esta complejidad aumenta el riesgo de errores durante la implementación.
+
+Como puede ver, a pesar de su familiaridad, las Instancias de servicios múltiples por patrón de host tienen algunos inconvenientes importantes. Veamos ahora otras formas de implementar microservicios que evitan estos problemas.
+
+Instancia de servicio por patrón de host
+Otra forma de implementar sus microservicios es la instancia de servicio por patrón de host . Cuando utiliza este patrón, ejecuta cada instancia de servicio de forma aislada en su propio host. Existen dos diferentes especializaciones diferentes de este patrón: Instancia de servicio por máquina virtual e Instancia de servicio por contenedor.
+
+Instancia de servicio por patrón de máquina virtual
+Cuando utiliza Instancia de servicio por patrón de máquina virtual , empaqueta cada servicio como una imagen de máquina virtual (VM) como Amazon EC2 AMI . Cada instancia de servicio es una VM (por ejemplo, una instancia de EC2) que se inicia con esa imagen de VM. El siguiente diagrama muestra la estructura de este patrón:
+
+El patrón Instancia de servicio por máquina virtual para implementar aplicaciones basadas en arquitectura de microservicios
+
+Este es el enfoque principal utilizado por Netflix para implementar su servicio de transmisión de video. Netflix empaqueta cada uno de sus servicios como un EC2 AMI usando Aminator . Cada instancia de servicio en ejecución es una instancia de EC2.
+
+Hay una variedad de herramientas que puede usar para construir sus propias máquinas virtuales. Puede configurar su servidor de integración continua (CI) (por ejemplo, Jenkins ) para invocar a Aminator para empaquetar sus servicios como EC2 AMI. Packer.io es otra opción para la creación automática de imágenes de VM. A diferencia de Aminator, admite una variedad de tecnologías de virtualización que incluyen EC2, DigitalOcean, VirtualBox y VMware.
+
+La empresa Boxfuse tiene una forma convincente de crear imágenes de máquinas virtuales, lo que supera los inconvenientes de las máquinas virtuales que describo a continuación. Boxfuse empaqueta su aplicación Java como una imagen VM mínima. Estas imágenes son rápidas de construir, arrancan rápidamente y son más seguras, ya que exponen una superficie de ataque limitada.
+
+La compañía CloudNative tiene The Bakery, una oferta de SaaS para crear EC2 AMI. Puede configurar su servidor de CI para invocar la panadería después de las pruebas para su pase de microservicio. The Bakery luego empaqueta su servicio como AMI. El uso de una oferta de SaaS, como la panadería, significa que no debe perder un tiempo valioso configurando la infraestructura de creación de AMI.
+
+El patrón Instancia de servicio por máquina virtual tiene varios beneficios. Un beneficio importante de las máquinas virtuales es que cada instancia de servicio se ejecuta en completo aislamiento. Tiene una cantidad fija de CPU y memoria y no puede robar recursos de otros servicios.
+
+Otro beneficio de implementar sus microservicios como VM es que puede aprovechar la infraestructura de la nube madura. Las nubes como AWS proporcionan funciones útiles, como equilibrio de carga y autoescalado.
+
+Otro gran beneficio de implementar su servicio como VM es que encapsula la tecnología de implementación de su servicio. Una vez que un servicio se ha empaquetado como una VM, se convierte en una caja negra. La API de administración de la VM se convierte en la API para implementar el servicio. La implementación se vuelve mucho más simple y confiable.
+
+Sin embargo, el patrón Instancia de servicio por máquina virtual tiene algunos inconvenientes. Un inconveniente es la utilización de recursos menos eficiente. Cada instancia de servicio tiene la sobrecarga de toda una VM, incluido el sistema operativo. Por otra parte, en un IaaS público típico, las máquinas virtuales vienen en tamaños fijos y es posible que la máquina virtual se infrautilice.
+
+Además, un IaaS público generalmente cobra por máquinas virtuales, independientemente de si están ocupadas o inactivas. Un IaaS como AWS proporciona autoescalamiento pero es difícil reaccionar rápidamente a los cambios en la demanda . En consecuencia, a menudo tiene que sobreprovisionar máquinas virtuales, lo que aumenta el costo de implementación.
+
+Otro inconveniente de este enfoque es que la implementación de una nueva versión de un servicio suele ser lenta. Por lo general, las imágenes VM son lentas debido a su tamaño. Además, las VM suelen tardar en crear instancias, nuevamente debido a su tamaño. Además, un sistema operativo suele tardar un tiempo en iniciarse. Tenga en cuenta, sin embargo, que esto no es universalmente cierto, ya que existen máquinas virtuales livianas como las creadas por Boxfuse.
+
+Otro inconveniente de la instancia de servicio por patrón de máquina virtual es que generalmente usted (u otra persona en su organización) es responsable de una gran cantidad de trabajos pesados ??indiferenciados. A menos que use una herramienta como Boxfuse que maneje la sobrecarga de construir y administrar las máquinas virtuales, entonces es su responsabilidad. Esta actividad necesaria pero que consume mucho tiempo distrae de su negocio principal.
+
+Veamos ahora una forma alternativa de implementar microservicios que es más liviano y aún así tiene muchos de los beneficios de las máquinas virtuales.
+
+Instancia de servicio por modelo de contenedor
+Cuando utiliza el patrón Instancia de servicio por contenedor , cada instancia de servicio se ejecuta en su propio contenedor. Los contenedores son un mecanismo de virtualización a nivel del sistema operativo . Un contenedor consta de uno o más procesos que se ejecutan en un sandbox. Desde la perspectiva de los procesos, tienen su propio espacio de nombres de puerto y sistema de archivos raíz. Puede limitar la memoria de un contenedor y los recursos de la CPU. Algunas implementaciones de contenedor también tienen limitación de velocidad de E / S. Entre los ejemplos de tecnologías de contenedores se incluyen Docker y Solaris Zones .
+
+El siguiente diagrama muestra la estructura de este patrón:
+
+El modelo de instancia de servicio por contenedor para implementar aplicaciones basadas en arquitectura de microservicios
+
+Para usar este patrón, empaquete su servicio como una imagen de contenedor. Una imagen de contenedor es una imagen del sistema de archivos que consiste en las aplicaciones y bibliotecas necesarias para ejecutar el servicio. Algunas imágenes de contenedor consisten en un sistema de archivos raíz completo de Linux. Otros son más livianos. Para implementar un servicio Java, por ejemplo, crea una imagen de contenedor que contiene el tiempo de ejecución de Java, tal vez un servidor Apache Tomcat y su aplicación Java compilada.
+
+Una vez que haya empaquetado su servicio como una imagen de contenedor, entonces lanzará uno o más contenedores. Por lo general, ejecuta varios contenedores en cada host físico o virtual. Puede usar un administrador de clúster como Kubernetes o Marathon para administrar sus contenedores. Un administrador de clúster trata a los hosts como un grupo de recursos. Decide dónde colocar cada contenedor en función de los recursos requeridos por el contenedor y los recursos disponibles en cada host.
+
+El patrón Instancia de servicio por contenedor tiene ventajas y desventajas. Los beneficios de los contenedores son similares a los de las máquinas virtuales. Aíslan sus instancias de servicio el uno del otro. Puede controlar fácilmente los recursos consumidos por cada contenedor. Además, al igual que las máquinas virtuales, los contenedores encapsulan la tecnología utilizada para implementar sus servicios. La API de administración de contenedores también sirve como API para administrar sus servicios.
+
+Sin embargo, a diferencia de las máquinas virtuales, los contenedores son una tecnología ligera. Las imágenes de contenedor suelen ser muy rápidas de construir. Por ejemplo, en mi computadora portátil toma tan solo 5 segundos empaquetar una aplicación Spring Boot como un contenedor Docker. Los contenedores también se inician muy rápidamente ya que no hay un mecanismo de arranque del sistema operativo demasiado largo. Cuando se inicia un contenedor, lo que se ejecuta es el servicio.
+
+Hay algunos inconvenientes para usar contenedores. Si bien la infraestructura de contenedores está madurando rápidamente, no es tan madura como la infraestructura para máquinas virtuales. Además, los contenedores no son tan seguros como las máquinas virtuales, ya que los contenedores comparten el núcleo del sistema operativo host entre sí.
+
+Otro inconveniente de los contenedores es que usted es responsable del levantamiento pesado indiferenciado de la administración de las imágenes del contenedor. Además, a menos que esté utilizando una solución de contenedor alojado como Google Container Engine o Amazon EC2 Container Service (ECS), entonces debe administrar la infraestructura del contenedor y posiblemente la infraestructura de VM en la que se ejecuta.
+
+Además, los contenedores a menudo se implementan en una infraestructura que tiene un precio por VM. En consecuencia, como se describió anteriormente, es probable que incurra en el costo adicional de aprovisionar máquinas virtuales en exceso con el fin de manejar los picos en la carga.
+
+Curiosamente, es probable que la distinción entre contenedores y VM sea borrosa. Como se mencionó anteriormente, las VM de Boxfuse son rápidas de compilar e iniciar. El proyecto Clear Containers tiene como objetivo crear máquinas virtuales livianas. [Editor: como se anunció en diciembre de 2017, el desarrollo de Clear Containers ahora continúa en el proyecto de código abierto Kata Containers .] También hay un creciente interés en unikernels . Docker, Inc. adquirió recientemente Unikernel Systems.
+
+También existe el concepto más nuevo y cada vez más popular de implementación sin servidor, que es un enfoque que evita el problema de tener que elegir entre implementar servicios en contenedores o máquinas virtuales. Veamos eso a continuación.
+
+Despliegue sin servidor
+AWS Lambda es un ejemplo de tecnología de implementación sin servidor. Es compatible con los servicios de Java, Node.js y Python. Para implementar un microservicio, lo empaqueta como un archivo ZIP y lo sube a AWS Lambda. También proporciona metadatos, que entre otras cosas especifica el nombre de la función que se invoca para manejar una solicitud (también conocido como un evento). AWS Lambda ejecuta automáticamente suficientes instancias de su microservicio para manejar las solicitudes. Simplemente se le factura por cada solicitud según el tiempo y la memoria consumida. Por supuesto, el diablo está en los detalles y pronto verá que AWS Lambda tiene limitaciones. Pero la idea de que ni usted como desarrollador ni nadie en su organización necesita preocuparse por ningún aspecto de servidores, máquinas virtuales o contenedores es increíblemente atractiva.
+
+Una función Lambda es un servicio sin estado. Por lo general, maneja las solicitudes invocando los servicios de AWS. Por ejemplo, una función Lambda que se invoca cuando una imagen se carga en un depósito S3 podría insertar un elemento en una tabla de imágenes DynamoDB y publicar un mensaje en una transmisión Kinesis para activar el procesamiento de imágenes. Una función Lambda también puede invocar servicios web de terceros.
+
+Hay cuatro formas de invocar una función Lambda:
+
+Directamente, utilizando una solicitud de servicio web
+Automáticamente, en respuesta a un evento generado por un servicio de AWS como S3, DynamoDB, Kinesis o Simple Email Service
+Automáticamente, a través de una puerta de enlace API de AWS para gestionar las solicitudes HTTP de los clientes de la aplicación
+Periódicamente, según un cronhorario similar
+Como puede ver, AWS Lambda es una forma conveniente de implementar microservicios. El precio basado en solicitudes significa que solo paga por el trabajo que sus servicios realmente realizan. Además, como usted no es responsable de la infraestructura de TI, puede concentrarse en desarrollar su aplicación.
+
+Sin embargo, hay algunas limitaciones importantes. No está destinado a ser utilizado para implementar servicios de larga ejecución, como un servicio que consume mensajes de un intermediario de mensajes de terceros. Las solicitudes deben completarse en 300 segundos. Los servicios deben ser apátridas, ya que en teoría AWS Lambda podría ejecutar una instancia separada para cada solicitud. Deben estar escritos en uno de los idiomas compatibles. Los servicios también deben comenzar rápidamente; de lo contrario, es posible que se agote el tiempo de espera y finalice.
+
+Resumen
+Implementar una aplicación de microservicios es un desafío. Hay decenas o incluso cientos de servicios escritos en una variedad de idiomas y marcos. Cada uno es una mini aplicación con sus propios requisitos específicos de implementación, recursos, escalado y monitoreo. Existen varios patrones de implementación de microservicios que incluyen Instancia de servicio por máquina virtual e Instancia de servicio por contenedor. Otra opción intrigante para implementar microservicios es AWS Lambda, un enfoque sin servidores. En la siguiente y última parte de esta serie, veremos cómo migrar una aplicación monolítica a una arquitectura de microservicios.
