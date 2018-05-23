@@ -1,0 +1,173 @@
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+microservicios , comunicación entre procesos (IPC) , arquitectura de microservicios
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios (este artículo)
+Descubrimiento de servicios en una arquitectura de microservicios
+Gestión de datos basada en eventos para microservicios
+Elegir una estrategia de implementación de microservicios
+Refactorizando un Monolito en Microservicios
+También puede descargar el conjunto completo de artículos, además de información sobre la implementación de microservicios utilizando NGINX Plus, como un libro electrónico: Microservicios: del diseño al despliegue . Además, consulte la nueva página de Soluciones de Microservicios .
+
+Este es el tercer artículo de nuestra serie sobre la construcción de aplicaciones con una arquitectura de microservicios. El primer artículo presenta el patrón de Arquitectura de Microservicios , lo compara con el patrón de Arquitectura Monolítica y analiza los beneficios y desventajas de usar microservicios. El segundo artículo describe cómo los clientes de una aplicación se comunican con los microservicios a través de un intermediario conocido como API Gateway . En este artículo, analizamos cómo los servicios dentro de un sistema se comunican entre sí. El cuarto artículo explora el problema estrechamente relacionado del descubrimiento de servicios.
+
+Introducción
+En una aplicación monolítica, los componentes se invocan entre sí mediante un método de nivel de lenguaje o llamadas a funciones. Por el contrario, una aplicación basada en microservicios es un sistema distribuido que se ejecuta en múltiples máquinas. Cada instancia de servicio es típicamente un proceso. En consecuencia, como muestra el siguiente diagrama, los servicios deben interactuar utilizando un mecanismo de comunicación entre procesos (IPC).
+
+
+En una aplicación de microservicios, los servicios necesitan un mecanismo de comunicación entre procesos (IPC) (mientras que los módulos en un monolito pueden llamar rutinas)
+
+Más adelante veremos tecnologías específicas de IPC, pero primero exploremos varios problemas de diseño.
+
+Estilos de interacción
+Al seleccionar un mecanismo de IPC para un servicio, es útil pensar primero sobre cómo interactúan los servicios. Hay una variedad de estilos de interacción cliente-servicio. Se pueden categorizar a lo largo de dos dimensiones. La primera dimensión es si la interacción es uno-a-uno o uno-a-muchos:
+
+Uno a uno: cada solicitud de cliente es procesada por exactamente una instancia de servicio.
+Uno a varios: cada solicitud es procesada por múltiples instancias de servicio.
+La segunda dimensión es si la interacción es sincrónica o asincrónica:
+
+Sincrónico: el cliente espera una respuesta oportuna del servicio e incluso puede bloquear mientras espera.
+Asíncrono: el cliente no bloquea mientras espera una respuesta, y la respuesta, si la hay, no se envía necesariamente de inmediato.
+La siguiente tabla muestra los diversos estilos de interacción.
+
+ 	Doce y cincuenta y nueve de la noche	Uno a muchos
+Sincrónico	Solicitar respuesta	 - 
+Asincrónico	Notificación	Publicar / suscribirse
+Solicitud / respuesta asincrónica	Publicar / respuestas asincrónicas
+Existen los siguientes tipos de interacciones uno-a-uno:
+
+Solicitud / respuesta: un cliente realiza una solicitud a un servicio y espera una respuesta. El cliente espera que la respuesta llegue oportunamente. En una aplicación basada en subprocesos, el subproceso que realiza la solicitud puede incluso bloquearse mientras espera.
+Notificación (también conocida como solicitud de un solo sentido): un cliente envía una solicitud a un servicio pero no se espera respuesta ni se envía.
+Solicitud / respuesta asincrónica: un cliente envía una solicitud a un servicio, que responde de forma asincrónica. El cliente no bloquea mientras espera y está diseñado con la suposición de que la respuesta podría no llegar por un tiempo.
+Existen los siguientes tipos de interacciones uno a muchos:
+
+Publicar / suscribir: un cliente publica un mensaje de notificación, que es consumido por cero o más servicios interesados.
+Publicar / respuestas asincrónicas: un cliente publica un mensaje de solicitud y luego espera una cierta cantidad de tiempo para recibir respuestas de los servicios interesados.
+Cada servicio generalmente usa una combinación de estos estilos de interacción. Para algunos servicios, un solo mecanismo de IPC es suficiente. Es posible que otros servicios necesiten usar una combinación de mecanismos de IPC. El siguiente diagrama muestra cómo los servicios en una aplicación de llamada de taxi pueden interactuar cuando el usuario solicita un viaje.
+
+
+Una aplicación de tax-hailing basada en microservicios puede usar una variedad de métodos de comunicación: notificación, solicitud-respuesta, publicación-suscripción.
+
+Los servicios usan una combinación de notificaciones, solicitud / respuesta y publicación / suscripción. Por ejemplo, el teléfono inteligente del pasajero envía una notificación al servicio de Trip Management para solicitar un retiro. El servicio Trip Management verifica que la cuenta del pasajero esté activa utilizando la solicitud / respuesta para invocar el Servicio de pasajeros. El servicio Trip Management luego crea el viaje y utiliza publicar / suscribir para notificar a otros servicios, incluido el Dispatcher, que localiza un controlador disponible.
+
+Ahora que hemos analizado los estilos de interacción, echemos un vistazo a cómo definir las API.
+
+Definiendo API
+La API de un servicio es un contrato entre el servicio y sus clientes. Independientemente de su elección del mecanismo de IPC, es importante definir con precisión la API de un servicio utilizando algún tipo de lenguaje de definición de interfaz (IDL). Incluso hay buenos argumentos para usar un enfoque de API primero para definir servicios. Comienza el desarrollo de un servicio escribiendo la definición de la interfaz y revisándola con los desarrolladores del cliente. Es solo después de iterar en la definición de API que implementa el servicio. Hacer este diseño por adelantado aumenta sus posibilidades de crear un servicio que satisfaga las necesidades de sus clientes.
+
+Como verá más adelante en este artículo, la naturaleza de la definición de API depende del mecanismo de IPC que esté utilizando. Si usa mensajes, la API consta de los canales de mensajes y los tipos de mensajes. Si usa HTTP, la API consta de las URL y los formatos de solicitud y respuesta. Más adelante describiremos algunos IDL con más detalle.
+
+API en evolución
+La API de un servicio invariablemente cambia con el tiempo. En una aplicación monolítica, generalmente es sencillo cambiar la API y actualizar a todas las personas que llaman. En una aplicación basada en microservicios, es mucho más difícil, incluso si todos los consumidores de su API son otros servicios en la misma aplicación. Por lo general, no se puede obligar a todos los clientes a actualizarse en sincronía con el servicio. Además, probablemente implemente incrementalmente nuevas versiones de un servicio de manera que las versiones antiguas y nuevas de un servicio se ejecutarán simultáneamente. Es importante tener una estrategia para enfrentar estos problemas.
+
+La forma en que maneje un cambio de API depende del tamaño del cambio. Algunos cambios son menores y retrocompatibles con la versión anterior. Podría, por ejemplo, agregar atributos a las solicitudes o respuestas. Tiene sentido diseñar clientes y servicios para que observen el principio de robustez . Los clientes que usan una API anterior deberían continuar trabajando con la nueva versión del servicio. El servicio proporciona valores predeterminados para los atributos de solicitud faltantes y los clientes ignoran cualquier atributo de respuesta adicional. Es importante utilizar un mecanismo de IPC y un formato de mensajería que le permita desarrollar fácilmente sus API.
+
+A veces, sin embargo, debe realizar cambios importantes e incompatibles en una API. Como no puede obligar a los clientes a actualizar inmediatamente, un servicio debe admitir versiones anteriores de la API durante un período de tiempo. Si está utilizando un mecanismo basado en HTTP como REST, un enfoque es insertar el número de versión en la URL. Cada instancia de servicio puede manejar múltiples versiones simultáneamente. Alternativamente, podría implementar instancias diferentes que cada una maneje una versión particular.
+
+Manejo de falla parcial
+Como se mencionó en el artículo anterior sobre API Gateway , en un sistema distribuido existe el riesgo omnipresente de falla parcial. Como los clientes y los servicios son procesos separados, es posible que un servicio no pueda responder de manera oportuna a la solicitud de un cliente. Un servicio podría estar caído debido a una falla o por mantenimiento. O el servicio podría estar sobrecargado y responder muy lentamente a las solicitudes.
+
+Considere, por ejemplo, el escenario de Detalles del producto de ese artículo. Imaginemos que el servicio de recomendación no responde. Una implementación ingenua de un cliente puede bloquear indefinidamente esperando una respuesta. Esto no solo daría como resultado una experiencia de usuario deficiente, sino que en muchas aplicaciones consumiría un recurso precioso, como un hilo. Eventualmente, el tiempo de ejecución se quedaría sin subprocesos y dejaría de responder como se muestra en la siguiente figura.
+
+
+Una aplicación de microservicios debe diseñarse para manejar fallas parciales, de lo contrario, el tiempo de ejecución podría quedarse sin subprocesos cuando los clientes bloqueen la espera de un servicio que no responde
+
+Para evitar este problema, es esencial que diseñe sus servicios para manejar fallas parciales.
+
+Un buen enfoque para seguir es el descrito por Netflix . Las estrategias para lidiar con fallas parciales incluyen:
+
+Tiempos de espera de la red: nunca bloquee indefinidamente y siempre use tiempos de espera mientras espera una respuesta. El uso de tiempos de espera garantiza que los recursos nunca estén inmovilizados indefinidamente.
+Limitar el número de solicitudes pendientes: impone un límite superior a la cantidad de solicitudes pendientes que un cliente puede tener con un servicio en particular. Si se ha alcanzado el límite, probablemente no tenga sentido realizar solicitudes adicionales, y esos intentos deben fallar inmediatamente.
+Patrón de interruptor automático  : rastree la cantidad de solicitudes exitosas y fallidas. Si la tasa de error excede un umbral configurado, dispare el interruptor de circuito para que los intentos posteriores fallen inmediatamente. Si un gran número de solicitudes está fallando, eso sugiere que el servicio no está disponible y que las solicitudes de envío no tienen sentido. Después de un período de tiempo de espera, el cliente debe intentar nuevamente y, si tiene éxito, cerrar el interruptor de circuito.
+Proporcionar retrocesos: realice la lógica de respaldo cuando falla una solicitud. Por ejemplo, devolver datos en caché o un valor predeterminado, como un conjunto vacío de recomendaciones.
+Netflix Hystrix es una biblioteca de código abierto que implementa estos y otros patrones. Si está utilizando la JVM definitivamente debería considerar usar Hystrix. Y, si está ejecutando en un entorno que no es de JVM, debe usar una biblioteca equivalente.
+
+Tecnologías IPC
+Hay muchas tecnologías diferentes de IPC para elegir. Los servicios pueden utilizar mecanismos de comunicación síncrona de solicitud / respuesta, como REST o Thrift basados ??en HTTP. Alternativamente, pueden usar mecanismos de comunicación asincrónicos basados ??en mensajes como AMQP o STOMP. También hay una variedad de formatos de mensajes diferentes. Los servicios pueden usar formatos legibles, basados ??en texto, como JSON o XML. Alternativamente, pueden usar un formato binario (que es más eficiente) como Avro o Protocol Buffers. Más adelante veremos los mecanismos de IPC síncronos, pero primero veamos los mecanismos asíncronos de IPC.
+
+Comunicación asincrónica basada en mensajes
+Al usar la mensajería, los procesos se comunican intercambiando mensajes de forma asincrónica. Un cliente realiza una solicitud a un servicio enviándole un mensaje. Si se espera que el servicio responda, lo hace al enviar un mensaje por separado al cliente. Como la comunicación es asincrónica, el cliente no bloquea la espera de una respuesta. En cambio, el cliente se escribe asumiendo que la respuesta no se recibirá de inmediato.
+
+Un mensaje consiste en encabezados (metadatos como el remitente) y un cuerpo del mensaje. Los mensajes se intercambian por canales . Cualquier cantidad de productores puede enviar mensajes a un canal. Del mismo modo, cualquier número de consumidores puede recibir mensajes de un canal. Hay dos tipos de canales, punto a punto y publicar-suscribir . Un canal punto a punto envía un mensaje a exactamente uno de los consumidores que está leyendo desde el canal. Los servicios utilizan canales punto a punto para los estilos de interacción uno a uno descritos anteriormente. Un canal de suscripción de publicación entrega cada mensaje a todos los consumidores conectados. Los servicios utilizan canales de publicación y suscripción para los estilos de interacción de uno a muchos descritos anteriormente.
+
+El siguiente diagrama muestra cómo la aplicación de llamada de taxi podría usar canales de suscripción de publicación.
+
+
+Los microservicios en la aplicación de llamada de taxi utilizan canales de publicación y suscripción para la comunicación entre el despachador y otros servicios
+
+El servicio Trip Management notifica a los servicios interesados, como el Despachador, sobre un nuevo Viaje escribiendo un mensaje de Trip Created en un canal de suscripción de publicación. El Dispatcher encuentra un controlador disponible y notifica a otros servicios escribiendo un mensaje Propuesto por el controlador a un canal de suscripción de publicación.
+
+Hay muchos sistemas de mensajería para elegir. Debe elegir uno que admita una variedad de lenguajes de programación. Algunos sistemas de mensajería admiten protocolos estándar como AMQP y STOMP. Otros sistemas de mensajería tienen protocolos propios pero documentados. Hay una gran cantidad de sistemas de mensajería de código abierto para elegir, incluidos RabbitMQ , Apache Kafka , Apache ActiveMQ y NSQ . En un nivel alto, todos admiten alguna forma de mensajes y canales. Todos se esfuerzan por ser confiables, de alto rendimiento y escalables. Sin embargo, existen diferencias significativas en los detalles del modelo de mensajería de cada intermediario.
+
+El uso de mensajes tiene muchas ventajas:
+
+Desacopla al cliente del servicio: un cliente realiza una solicitud simplemente enviando un mensaje al canal apropiado. El cliente no está al tanto de las instancias de servicio. No necesita usar un mecanismo de descubrimiento para determinar la ubicación de una instancia de servicio.
+Almacenamiento en memoria intermedia de mensajes: con un protocolo de petición / respuesta síncrono, como HTTP, tanto el cliente como el servicio deben estar disponibles durante todo el intercambio. Por el contrario, un intermediario de mensajes pone en cola los mensajes escritos en un canal hasta que puedan ser procesados ??por el consumidor. Esto significa, por ejemplo, que una tienda en línea puede aceptar pedidos de clientes incluso cuando el sistema de cumplimiento de pedidos es lento o no está disponible. Los mensajes de pedido simplemente hacen cola.
+Interacciones flexibles de servicio al cliente: la mensajería admite todos los estilos de interacción descritos anteriormente.
+Comunicación explícita entre procesos: los mecanismos basados ??en RPC intentan hacer que invocar un servicio remoto parezca lo mismo que llamar a un servicio local. Sin embargo, debido a las leyes de la física y la posibilidad de falla parcial, de hecho son bastante diferentes. La mensajería hace que estas diferencias sean muy explícitas para que los desarrolladores no sientan una falsa sensación de seguridad.
+Sin embargo, hay algunos inconvenientes al uso de mensajes:
+
+Complejidad operacional adicional: el sistema de mensajería es otro componente del sistema que debe instalarse, configurarse y operarse. Es esencial que el intermediario de mensajes esté altamente disponible, de lo contrario la confiabilidad del sistema se verá afectada.
+Complejidad de la implementación de la interacción basada en solicitud / respuesta: la interacción de solicitud / respuesta requiere un poco de trabajo para implementar. Cada mensaje de solicitud debe contener un identificador de canal de respuesta y un identificador de correlación. El servicio escribe un mensaje de respuesta que contiene el ID de correlación al canal de respuesta. El cliente usa la ID de correlación para hacer coincidir la respuesta con la solicitud. A menudo es más fácil usar un mecanismo de IPC que soporte directamente la solicitud / respuesta.
+Ahora que hemos analizado el uso de IPC basado en mensajes, examinemos el IPC basado en solicitudes / respuestas.
+
+Sincrónico, petición / respuesta IPC
+Cuando se utiliza un mecanismo de IPC síncrono basado en solicitud / respuesta, un cliente envía una solicitud a un servicio. El servicio procesa la solicitud y devuelve una respuesta. En muchos clientes, el hilo que bloquea la solicitud bloquea mientras espera una respuesta. Otros clientes pueden usar un código de cliente asíncrono dirigido por eventos que quizás esté encapsulado por Futures o Rx Observables. Sin embargo, a diferencia del uso de mensajes, el cliente asume que la respuesta llegará oportunamente. Hay numerosos protocolos para elegir. Dos protocolos populares son REST y Thrift. Primero echemos un vistazo a REST.
+
+DESCANSO
+Hoy está de moda desarrollar API en el estilo RESTful . REST es un mecanismo de IPC que (casi siempre) usa HTTP. Un concepto clave en REST es un recurso, que típicamente representa un objeto comercial como un Cliente o Producto, o una colección de objetos comerciales. REST usa los verbos HTTP para manipular recursos, a los que se hace referencia mediante una URL. Por ejemplo, una GETsolicitud devuelve la representación de un recurso, que puede tener la forma de un documento XML o un objeto JSON. Una POSTsolicitud crea un nuevo recurso y una PUTsolicitud actualiza un recurso. Para citar a Roy Fielding, el creador de REST:
+
+"REST proporciona un conjunto de restricciones arquitectónicas que, cuando se aplican en conjunto, enfatiza la escalabilidad de las interacciones de los componentes, la generalidad de las interfaces, el despliegue independiente de componentes y los componentes intermedios para reducir la latencia de interacción, reforzar la seguridad y encapsular sistemas heredados".
+
+-Formamento, estilos arquitectónicos y el diseño de arquitecturas de software basadas en red
+
+El siguiente diagrama muestra una de las formas en que la aplicación de llamada de taxi podría usar REST.
+
+
+En la aplicación de llamadas en taxi basada en microservicios, el teléfono inteligente del pasajero envía la solicitud POST, cuyo microservicio de gestión de viajes se convierte en solicitud GET para el microservicio de verificación de pasajeros
+
+El teléfono inteligente del pasajero solicita un viaje haciendo una POSTsolicitud al /tripsrecurso del servicio Trip Management. Este servicio maneja la solicitud enviando una GETsolicitud de información sobre el pasajero al servicio de gestión de pasajeros. Después de verificar que el pasajero está autorizado para crear un viaje, el servicio Trip Management crea el viaje y devuelve una 201respuesta al teléfono inteligente.
+
+Muchos desarrolladores afirman que sus API basadas en HTTP son RESTful. Sin embargo, como describe Fielding en esta publicación de blog , no todos realmente lo son. Leonard Richardson (sin relación) define un modelo de madurez muy útil para REST que consta de los siguientes niveles.
+
+Nivel 0: los clientes de una API de nivel 0 invocan el servicio al realizar POSTsolicitudes HTTP a su único punto final de URL. Cada solicitud especifica la acción a realizar, el objetivo de la acción (por ejemplo, el objeto comercial) y cualquier parámetro.
+Nivel 1: una API de nivel 1 respalda la idea de recursos. Para realizar una acción en un recurso, un cliente realiza una POSTsolicitud que especifica la acción a realizar y cualquier parámetro.
+Nivel 2: una API de nivel 2 usa verbos HTTP para realizar acciones: GETpara recuperar, POSTcrear y PUTactualizar. Los parámetros y el cuerpo de consulta de solicitud, si los hay, especifican los parámetros de la acción. Esto permite que los servicios aprovechen la infraestructura web, como el almacenamiento en caché de las GETsolicitudes.
+Nivel 3: el diseño de una API de nivel 3 se basa en el principio terriblemente llamado HATEOAS (Hipertexto como motor del estado de la aplicación). La idea básica es que la representación de un recurso devuelto por una GETsolicitud contiene enlaces para realizar las acciones permitidas en ese recurso. Por ejemplo, un cliente puede cancelar un pedido usando un enlace en la representación del pedido devuelto en respuesta a la GETsolicitud enviada para recuperar el pedido. Los beneficios de HATEOAS incluyen no tener que conectar las URL al código del cliente. Otro beneficio es que debido a que la representación de un recurso contiene enlaces para las acciones permitidas, el cliente no tiene que adivinar qué acciones se pueden realizar en un recurso en su estado actual.
+Existen numerosos beneficios al usar un protocolo basado en HTTP:
+
+HTTP es simple y familiar.
+Puede probar una API HTTP desde un navegador usando una extensión como Postman o desde la línea de comando usando curl(suponiendo que se usa JSON o algún otro formato de texto).
+Admite directamente la comunicación de solicitud / respuesta.
+HTTP es, por supuesto, amigable con el firewall.
+No requiere un intermediario intermediario, lo que simplifica la arquitectura del sistema.
+Hay algunos inconvenientes al usar HTTP:
+
+Solo admite directamente el estilo de interacción solicitud / respuesta. Puede usar HTTP para notificaciones, pero el servidor siempre debe enviar una respuesta HTTP.
+Debido a que el cliente y el servicio se comunican directamente (sin un intermediario para almacenar en el búfer los mensajes), ambos deben estar ejecutándose durante el intercambio.
+El cliente debe conocer la ubicación (es decir, la URL) de cada instancia de servicio. Como se describió en el artículo anterior sobre API Gateway , este es un problema no trivial en una aplicación moderna. Los clientes deben usar un mecanismo de descubrimiento de servicio para localizar instancias de servicio.
+La comunidad de desarrolladores ha redescubierto recientemente el valor de un lenguaje de definición de interfaz para API RESTful. Hay algunas opciones, incluyendo RAML y Swagger . Algunos IDL, como Swagger, le permiten definir el formato de los mensajes de solicitud y respuesta. Otros, como RAML, requieren que uses una especificación separada, como JSON Schema . Además de describir las API, los IDL suelen tener herramientas que generan los stubs de los clientes y los esqueletos de los servidores a partir de una definición de interfaz.
+
+Ahorro
+Apache Thrift es una alternativa interesante para REST. Es un marco para escribir clientes y servidores RPC en varios idiomas . Thrift proporciona un IDL estilo C para definir tus API. Utiliza el compilador Thrift para generar stubs del lado del cliente y esqueletos del lado del servidor. El compilador genera código para una variedad de idiomas, incluyendo C ++, Java, Python, PHP, Ruby, Erlang y Node.js.
+
+Una interfaz Thrift consiste en uno o más servicios. Una definición de servicio es análoga a una interfaz de Java. Es una colección de métodos fuertemente tipados. Los métodos de ahorro pueden devolver un valor (posiblemente vacío) o pueden definirse como unidireccionales. Los métodos que devuelven un valor implementan el estilo de interacción solicitud / respuesta. El cliente espera una respuesta y puede arrojar una excepción. Los métodos unidireccionales corresponden al estilo de notificación de interacción. El servidor no envía una respuesta.
+
+Thrift admite varios formatos de mensaje: JSON, binario y binario compacto. Binary es más eficiente que JSON porque es más rápido de decodificar. Y, como su nombre lo sugiere, el binario compacto es un formato eficiente en el uso del espacio. JSON es, por supuesto, humano y amigable para el navegador. Thrift también le ofrece una selección de protocolos de transporte, incluidos TCP y HTTP sin procesar. TCP sin procesar es probable que sea más eficiente que HTTP. Sin embargo, HTTP es firewall, navegador y amigable para los humanos.
+
+Formatos de mensaje
+Ahora que hemos analizado HTTP y Thrift, examinemos el problema de los formatos de mensaje. Si está utilizando un sistema de mensajería o REST, puede elegir su formato de mensaje. Otros mecanismos de IPC como Thrift pueden admitir solo una pequeña cantidad de formatos de mensaje, quizás solo uno. En cualquier caso, es importante usar un formato de mensaje en varios idiomas. Incluso si escribe sus microservicios en un solo idioma hoy, es probable que use otros idiomas en el futuro.
+
+Hay dos tipos principales de formatos de mensaje: texto y binario. Los ejemplos de formatos basados ??en texto incluyen JSON y XML. Una ventaja de estos formatos es que no solo son legibles por los humanos, sino que se autodescriben. En JSON, los atributos de un objeto están representados por una colección de pares nombre-valor. Del mismo modo, en XML los atributos están representados por elementos y valores con nombre. Esto permite que un consumidor de un mensaje elija los valores que le interesan e ignore el resto. En consecuencia, cambios menores en el formato del mensaje pueden ser fácilmente retrocompatibles.
+
+La estructura de los documentos XML se especifica mediante un esquema XML . Con el tiempo, la comunidad de desarrolladores se ha dado cuenta de que JSON también necesita un mecanismo similar. Una opción es usar el Esquema JSON , ya sea independiente o como parte de un IDL como Swagger.
+
+Una desventaja de utilizar un formato de mensaje de texto es que los mensajes tienden a ser detallados, especialmente XML. Como los mensajes son autodescriptivos, cada mensaje contiene el nombre de los atributos además de sus valores. Otro inconveniente es la sobrecarga de analizar el texto. En consecuencia, es posible que desee considerar el uso de un formato binario.
+
+Hay varios formatos binarios para elegir. Si está utilizando Thrift RPC, puede usar Thrift binario. Si elige el formato del mensaje, las opciones populares incluyen Protocol Buffers y Apache Avro . Ambos formatos proporcionan un IDL escrito para definir la estructura de sus mensajes. Sin embargo, una diferencia es que Protocol Buffers usa campos etiquetados, mientras que un consumidor de Avro necesita conocer el esquema para interpretar los mensajes. Como resultado, la evolución de API es más fácil con Protocol Buffers que con Avro. Esta publicación de blog es una excelente comparación de Thrift, Protocol Buffers y Avro.
+
+Resumen
+Los microservicios deben comunicarse utilizando un mecanismo de comunicación entre procesos. Al diseñar cómo se comunicarán sus servicios, debe tener en cuenta varios aspectos: cómo interactúan los servicios, cómo especificar la API para cada servicio, cómo evolucionar las API y cómo manejar una falla parcial. Hay dos tipos de mecanismos de IPC que pueden usar los microservicios, la mensajería asincrónica y la solicitud / respuesta síncrona. En el próximo artículo de la serie, veremos el problema del descubrimiento de servicios en una arquitectura de microservicios.
