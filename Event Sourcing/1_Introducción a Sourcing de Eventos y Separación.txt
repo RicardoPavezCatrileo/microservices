@@ -1,0 +1,25 @@
+Introducción a Sourcing de Eventos y Separación de Responsabilidad de Consulta de Comando (CQRS)
+Para ver diapositivas y videos sobre la construcción de microservicios que utilizan fuentes de eventos y CQRS, consulte Creación e implementación de microservicios con fuentes de eventos, CQRS y Docker .
+
+Acerca del abastecimiento de eventos
+Como se describió anteriormente , el abastecimiento de eventos simplifica el desarrollo de aplicaciones basadas en eventos. La idea clave en el abastecimiento de eventos es que en lugar de persistir el estado actual de una entidad comercial, un servicio persiste en los eventos de cambio de estado de la entidad. Por ejemplo, los eventos que cambian el estado de una cuenta bancaria incluyen AccountOpened, AccountDebited y AccountCredited. Cuando un servicio recrea el estado actual de una entidad, simplemente reproduce los eventos.
+
+
+
+Acerca de la tienda de eventos
+La aplicación persiste eventos en una tienda de eventos. La tienda de eventos se comporta como una base de datos y un intermediario de mensajes. Es como una base de datos ya que la aplicación persiste y recupera eventos para una entidad por clave principal. La tienda de eventos también se comporta como un intermediario de mensajes, ya que publica eventos recientemente conservados para los consumidores interesados.
+
+Beneficios del abastecimiento de eventos
+El abastecimiento de eventos tiene varios beneficios. Es una forma excelente de implementar un sistema basado en eventos porque cuando un servicio persiste en un nuevo evento en la tienda de eventos, ese evento se publica simultáneamente. No es necesario implementar un mecanismo para actualizar atómicamente el estado y publicar un evento. Otro beneficio del abastecimiento de eventos es que los eventos publicados por un sistema son un registro de auditoría preciso de todas las actualizaciones de los usuarios. Ya no es necesario rociar código de registro de auditoría propenso a errores a lo largo de su lógica comercial. La contratación de eventos también elimina el problema de mapeo O / R ya que los eventos son triviales para persistir.
+
+Acerca de la separación de responsabilidad de consulta de comando (CQRS)
+La contratación de eventos es excelente, pero para la mayoría de las aplicaciones es insuficiente. Esto se debe a que una tienda de eventos solo admite la recuperación de eventos mediante la clave principal de una entidad. Para implementar consultas más complejas que realicen combinaciones, como las que generalmente requiere la interfaz de usuario, debe usar otro patrón llamado Command-Query-Responsibility-Separation (CQRS). CQRS separa el procesamiento de consultas del procesamiento de comandos, que actualiza las entidades mediante la lógica de negocios que se implementa mediante el uso de fuentes de eventos. El siguiente diagrama muestra la estructura de un sistema que usa CQRS:
+
+
+
+El lado de la consulta consume los eventos publicados por el lado del comando cuando actualiza agregados y actualiza las vistas. Las vistas están diseñadas específicamente para admitir consultas y, a menudo implementadas utilizando bases de datos NoSQL. Por ejemplo, un servicio podría usar una vista basada en Neo4J para manejar consultas sobre un gráfico social y otro podría implementar la búsqueda de texto usando ElasticSearch.
+
+Además de abordar las limitaciones del abastecimiento de eventos, CQRS tiene otros beneficios. La separación de preocupaciones significa que ya no implementa un único modelo que maneje tanto las actualizaciones como las consultas. En cambio, tiene dos modelos estrechamente enfocados, uno para actualizaciones y otro para consultas. Además, CQRS le permite escalar el lado del comando por separado desde el lado de la consulta. Esto es especialmente relevante ya que muchas aplicaciones son muy leídas. Este patrón también mejora el rendimiento y la escalabilidad porque el lado de la consulta puede usar vistas (desnormalizadas) optimizadas para consultas específicas.
+
+Desarrollar aplicaciones que usan el abastecimiento de eventos
+Para obtener más información sobre cómo desarrollar aplicaciones que utilicen fuentes de eventos, consulte la guía del desarrollador .

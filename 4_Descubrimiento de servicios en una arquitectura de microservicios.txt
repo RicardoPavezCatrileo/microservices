@@ -1,0 +1,133 @@
+Descubrimiento de servicios en una arquitectura de microservicios
+microservicios , descubrimiento de servicios , etc. , DevOps , Netflix , Amazon Web Services (AWS) , ZooKeeper , Consul
+
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+Descubrimiento del servicio en una arquitectura de microservicios (este artículo)
+Gestión de datos basada en eventos para microservicios
+Elegir una estrategia de implementación de microservicios
+Refactorizando un Monolito en Microservicios
+También puede descargar el conjunto completo de artículos, además de información sobre la implementación de microservicios utilizando NGINX Plus, como un libro electrónico: Microservicios: del diseño al despliegue . Además, consulte la nueva página de Soluciones de Microservicios .
+
+Este es el cuarto artículo de nuestra serie sobre la creación de aplicaciones con microservicios. El primer artículo presenta el patrón de Arquitectura de Microservicios y discutió los beneficios y desventajas del uso de microservicios. El segundo y tercer artículos de la serie describen diferentes aspectos de la comunicación dentro de una arquitectura de microservicios. En este artículo, exploramos el problema estrechamente relacionado del descubrimiento de servicios.
+
+¿Por qué utilizar Service Discovery?
+Imaginemos que está escribiendo un código que invoca un servicio que tiene una API REST o una API Thrift. Para realizar una solicitud, su código necesita conocer la ubicación de la red (dirección IP y puerto) de una instancia de servicio. En una aplicación tradicional que se ejecuta en hardware físico, las ubicaciones de red de las instancias de servicio son relativamente estáticas. Por ejemplo, su código puede leer las ubicaciones de red desde un archivo de configuración que se actualiza ocasionalmente.
+
+Sin embargo, en una aplicación de microservicios moderna basada en la nube, este es un problema mucho más difícil de resolver, como se muestra en el siguiente diagrama.
+
+
+
+Las instancias de servicio han asignado dinámicamente ubicaciones de red. Además, el conjunto de instancias de servicio cambia dinámicamente debido a la autoescala, las fallas y las actualizaciones. En consecuencia, su código de cliente necesita usar un mecanismo de descubrimiento de servicio más elaborado.
+
+Hay dos patrones principales de descubrimiento de servicios: el descubrimiento del lado del cliente y el descubrimiento del lado del servidor . Primero veamos el descubrimiento del lado del cliente.
+
+El patrón de descubrimiento del lado del cliente
+Al usar la detección del lado del cliente, el cliente es responsable de determinar las ubicaciones de red de las instancias de servicio disponibles y las solicitudes de equilibrio de carga a través de ellas. El cliente consulta un registro de servicio, que es una base de datos de instancias de servicio disponibles. Luego, el cliente usa un algoritmo de equilibrio de carga para seleccionar una de las instancias de servicio disponibles y realiza una solicitud.
+
+El siguiente diagrama muestra la estructura de este patrón.
+
+
+La ubicación de red de una instancia de servicio se registra con el registro de servicio cuando se inicia. Se elimina del registro de servicio cuando la instancia finaliza. El registro de la instancia de servicio normalmente se actualiza periódicamente mediante un mecanismo de latido.
+
+Netflix OSS proporciona un gran ejemplo del patrón de descubrimiento del lado del cliente. Netflix Eureka es un registro de servicio. Proporciona una API REST para administrar el registro de instancias de servicio y para consultar instancias disponibles. Netflix Ribbon es un cliente de IPC que trabaja con Eureka para cargar solicitudes de saldo en las instancias de servicio disponibles. Hablaremos de Eureka con más profundidad más adelante en este artículo.
+
+El patrón de descubrimiento del lado del cliente tiene una variedad de beneficios y desventajas. Este patrón es relativamente sencillo y, a excepción del registro de servicio, no hay otras partes móviles. Además, dado que el cliente conoce las instancias de servicios disponibles, puede tomar decisiones inteligentes de equilibrio de carga específicas de la aplicación, como el uso constante de hashing. Una desventaja importante de este patrón es que une al cliente con el registro de servicio. Debe implementar la lógica de descubrimiento de servicio del lado del cliente para cada lenguaje de programación y marco utilizado por sus clientes de servicio.
+
+Ahora que hemos analizado el descubrimiento del lado del cliente, echemos un vistazo al descubrimiento del lado del servidor.
+
+El patrón de descubrimiento del lado del servidor
+
+El otro enfoque para el descubrimiento de servicios es el patrón de descubrimiento del lado del servidor . 
+El siguiente diagrama muestra la estructura de este patrón.
+
+
+El cliente realiza una solicitud a un servicio a través de un equilibrador de carga. El equilibrador de carga consulta el registro de servicio y enruta cada solicitud a una instancia de servicio disponible. Al igual que con el descubrimiento del lado del cliente, las instancias del servicio se registran y eliminan del registro del servicio.
+
+La carga AWS Elastic Balancer (ELB) es un ejemplo de un router descubrimiento del lado del servidor. Un ELB se usa comúnmente para equilibrar la carga del tráfico externo desde Internet. Sin embargo, también puede usar un ELB para equilibrar el tráfico de carga que es interno a una nube privada virtual (VPC). Un cliente realiza solicitudes (HTTP o TCP) a través del ELB utilizando su nombre DNS. La carga ELB equilibra el tráfico entre un conjunto de instancias registradas de Elastic Compute Cloud (EC2) o contenedores EC2 Container Service (ECS). No hay un registro de servicio por separado. En su lugar, las instancias EC2 y los contenedores ECS se registran con el ELB mismo.
+
+Los servidores HTTP y balanceadores de carga como NGINX Plus y NGINX también se pueden usar como un equilibrador de carga de descubrimiento del lado del servidor. Por ejemplo, esta publicación de blog describe el uso de la Plantilla Consul para reconfigurar dinámicamente el proxy inverso NGINX. Consul Template es una herramienta que regenera periódicamente archivos de configuración arbitrarios a partir de datos de configuración almacenados en el registro de servicios de Consul . Ejecuta un comando de shell arbitrario cada vez que cambian los archivos. En el ejemplo descrito en la publicación del blog, la Plantilla del cónsul genera un nginx.confarchivo, que configura el proxying inverso, y luego ejecuta un comando que le dice a NGINX que vuelva a cargar la configuración. Una implementación más sofisticada podría reconfigurar dinámicamente NGINX Plus utilizando su HTTP API o DNS .
+
+Algunos entornos de implementación, como Kubernetes y Marathon, ejecutan un proxy en cada host del clúster. El proxy desempeña el papel de un equilibrador de carga de descubrimiento del lado del servidor. Para realizar una solicitud a un servicio, un cliente enruta la solicitud a través del proxy utilizando la dirección IP del host y el puerto asignado al servicio. Luego, el proxy reenvía transparentemente la solicitud a una instancia de servicio disponible que se ejecuta en algún lugar del clúster.
+
+El patrón de descubrimiento del lado del servidor tiene varios beneficios y desventajas. Un gran beneficio de este patrón es que los detalles del descubrimiento se abstraen del cliente. Los clientes simplemente realizan solicitudes al equilibrador de carga. Esto elimina la necesidad de implementar lógica de descubrimiento para cada lenguaje de programación y marco utilizado por sus clientes de servicio. Además, como se mencionó anteriormente, algunos entornos de implementación brindan esta funcionalidad de forma gratuita. Este patrón también tiene algunos inconvenientes, sin embargo. A menos que el entorno de despliegue proporcione el equilibrador de carga, es otro componente de sistema altamente disponible que debe configurar y administrar.
+
+El registro de servicio
+El registro de servicio es una parte clave del descubrimiento de servicios. Es una base de datos que contiene las ubicaciones de red de instancias de servicio. Un registro de servicio necesita estar altamente disponible y actualizado. Los clientes pueden almacenar en caché las ubicaciones de red obtenidas del registro de servicio. Sin embargo, esa información finalmente se vuelve obsoleta y los clientes no pueden descubrir instancias de servicio. En consecuencia, un registro de servicio consta de un clúster de servidores que utiliza un protocolo de replicación para mantener la coherencia.
+
+Como se mencionó anteriormente, Netflix Eureka es un buen ejemplo de registro de servicios. Proporciona una API REST para registrar y consultar instancias de servicio. Una instancia de servicio registra su ubicación de red mediante una POSTsolicitud. Cada 30 segundos debe actualizar su registro mediante una PUTsolicitud. Se elimina un registro ya sea mediante una DELETEsolicitud HTTP o por el tiempo de espera de registro de instancias. Como era de esperar, un cliente puede recuperar las instancias de servicio registradas mediante una GETsolicitud HTTP .
+
+Netflix logra una alta disponibilidad ejecutando uno o más servidores Eureka en cada zona de disponibilidad de Amazon EC2. Cada servidor Eureka se ejecuta en una instancia EC2 que tiene una dirección IP elástica . Los TEXTregistros DNS se utilizan para almacenar la configuración del clúster Eureka, que es un mapa de las zonas de disponibilidad a una lista de las ubicaciones de red de los servidores Eureka. Cuando un servidor Eureka se inicia, consulta DNS para recuperar la configuración del clúster Eureka, ubica a sus pares y se asigna una dirección IP elástica no utilizada.
+
+Los clientes de Eureka, servicios y clientes de servicios, consultan DNS para descubrir las ubicaciones de red de los servidores de Eureka. Los clientes prefieren usar un servidor Eureka en la misma zona de disponibilidad. Sin embargo, si no hay ninguno disponible, el cliente usa un servidor Eureka en otra zona de disponibilidad.
+
+Otros ejemplos de registros de servicios incluyen:
+
+etcd  : un almacén de valores-clave distribuido, consistente y de alta disponibilidad que se utiliza para la configuración compartida y el descubrimiento de servicios. Dos proyectos notables que usan etcd son Kubernetes y Cloud Foundry .
+cónsul  : una herramienta para descubrir y configurar servicios. Proporciona una API que permite a los clientes registrarse y descubrir servicios. El cónsul puede realizar controles de salud para determinar la disponibilidad del servicio.
+Apache Zookeeper  : un servicio de coordinación de alto rendimiento y uso generalizado para aplicaciones distribuidas. Apache Zookeeper fue originalmente un subproyecto de Hadoop, pero ahora es un proyecto de alto nivel.
+Además, como se indicó anteriormente, algunos sistemas como Kubernetes, Marathon y AWS no tienen un registro de servicio explícito. En cambio, el registro de servicio es solo una parte integrada de la infraestructura.
+
+Ahora que hemos analizado el concepto de registro de servicio, veamos cómo se registran las instancias de servicio en el registro de servicio.
+
+Opciones de registro de servicio
+Como se mencionó anteriormente, las instancias de servicio deben registrarse y eliminarse del registro del servicio. Hay un par de maneras diferentes de manejar el registro y la eliminación del registro. Una opción es que las instancias de servicio se registren, el patrón de autorregistro . La otra opción es que otro componente del sistema administre el registro de instancias de servicio, el patrón de registro de terceros . Primero veamos el patrón de autorregistro.
+
+El patrón de auto-registro
+Al utilizar el patrón de autorregistro , una instancia de servicio es responsable de registrarse y cancelar el registro en el registro de servicio. Además, si es necesario, una instancia de servicio envía solicitudes de latido para evitar que su registro expire. El siguiente diagrama muestra la estructura de este patrón.
+
+Con el patrón de autorregistro para el descubrimiento de servicios, una instancia de servicio se registra y se anula el registro de servicio con el registro
+
+Un buen ejemplo de este enfoque es el cliente Netflix OSS Eureka . El cliente de Eureka maneja todos los aspectos del registro y la eliminación de registros de la instancia de servicio. El proyecto Spring Cloud , que implementa varios patrones, incluido el descubrimiento de servicios, hace que sea fácil registrar automáticamente una instancia de servicio con Eureka. Simplemente anota tu clase de configuración de Java con una @EnableEurekaClientanotación.
+
+El patrón de autorregistro tiene varios beneficios y desventajas. Una ventaja es que es relativamente simple y no requiere ningún otro componente del sistema. Sin embargo, un inconveniente importante es que combina las instancias de servicio con el registro de servicio. Debe implementar el código de registro en cada lenguaje de programación y marco utilizado por sus servicios.
+
+El enfoque alternativo, que desacopla servicios del registro de servicio, es el patrón de registro de terceros.
+
+El patrón de registro de terceros
+Al utilizar el patrón de registro de terceros , las instancias de servicio no son responsables de registrarse en el registro de servicio. En cambio, otro componente del sistema conocido como el registrador de servicios se encarga del registro. El registrador de servicios rastrea los cambios al conjunto de instancias en ejecución al sondear el entorno de despliegue o al suscribirse a eventos. Cuando se da cuenta de una nueva instancia de servicio disponible, registra la instancia con el registro de servicio. El registrador de servicio también cancela las instancias de servicio finalizadas. El siguiente diagrama muestra la estructura de este patrón.
+
+Con el patrón de registro de terceros para la detección de servicios, un registrador de servicios independiente registra y anula las instancias de servicio con el registro de servicio.
+
+Un ejemplo de un registrador de servicios es el proyecto Registrator de fuente abierta . Registra y elimina automáticamente las instancias de servicio que se implementan como contenedores Docker. Registrator admite varios registros de servicio, incluidos etcd y Consul.
+
+Otro ejemplo de un registrador de servicios es NetflixOSS Prana . Principalmente para los servicios escritos en lenguajes que no son de JVM, es una aplicación de sidecar que corre junto a una instancia de servicio. Prana registra y cancela el registro de la instancia de servicio con Netflix Eureka.
+
+El registrador de servicios es un componente integrado de los entornos de implementación. Las instancias EC2 creadas por un Grupo de ajuste automático de escala se pueden registrar automáticamente con un ELB. Los servicios de Kubernetes se registran automáticamente y están disponibles para su descubrimiento.
+
+El patrón de registro de terceros tiene varios beneficios y desventajas. Un beneficio importante es que los servicios están desacoplados del registro de servicio. No es necesario implementar la lógica de registro de servicio para cada lenguaje de programación y marco utilizado por los desarrolladores. En cambio, el registro de la instancia de servicio se maneja de manera centralizada dentro de un servicio dedicado.
+
+Una desventaja de este patrón es que, a menos que esté integrado en el entorno de despliegue, es otro componente del sistema altamente disponible que debe configurar y administrar.
+
+Resumen
+En una aplicación de microservicios, el conjunto de instancias de servicio en ejecución cambia dinámicamente. Las instancias tienen asignadas dinámicamente ubicaciones de red. En consecuencia, para que un cliente haga una solicitud a un servicio, debe usar un mecanismo de descubrimiento de servicio.
+
+Una parte clave del descubrimiento del servicio es el registro del servicio . El registro de servicio es una base de datos de instancias de servicio disponibles. El registro de servicio proporciona una API de administración y una API de consulta. Las instancias de servicio se registran y anulan el registro del servicio mediante la API de administración. Los componentes del sistema utilizan la API de consulta para descubrir instancias de servicio disponibles.
+
+Hay dos patrones principales de descubrimiento de servicios: descubrimiento del lado del cliente y descubrimiento del lado del servicio. En los sistemas que utilizan el descubrimiento de servicios del lado del cliente , los clientes consultan el registro del servicio, seleccionan una instancia disponible y realizan una solicitud. En los sistemas que utilizan el descubrimiento del lado del servidor , los clientes realizan solicitudes a través de un enrutador, que consulta el registro del servicio y reenvía la solicitud a una instancia disponible.
+
+Hay dos formas principales en que las instancias de servicio se registran y anulan el registro del servicio. Una opción es que las instancias de servicio se registren en el registro de servicio, el patrón de autorregistro . La otra opción es que algún otro componente del sistema maneje el registro y la eliminación del registro en nombre del servicio, el patrón de registro de terceros .
+
+En algunos entornos de despliegue, debe configurar su propia infraestructura de descubrimiento de servicios utilizando un registro de servicio como Netflix Eureka , etc. o Apache Zookeeper . En otros entornos de implementación, el descubrimiento de servicios está integrado. Por ejemplo, Kubernetes y Marathon manejan el registro y la eliminación de instancias del servicio. También ejecutan un proxy en cada host del clúster que desempeña la función de enrutador de descubrimiento del lado del servidor .
+
+Un proxy inverso HTTP y equilibrador de carga como NGINX también se puede utilizar como un equilibrador de carga de descubrimiento del lado del servidor. El registro de servicio puede enviar la información de enrutamiento a NGINX e invocar una actualización de configuración elegante; por ejemplo, puede usar la plantilla de cónsul . NGINX Plus admite mecanismos de reconfiguración dinámica adicionales  : puede extraer información sobre las instancias de servicio del registro mediante DNS, y proporciona una API para la reconfiguración remota.
+
+En futuras publicaciones de blog, continuaremos profundizando en otros aspectos de microservicios. Regístrese en la lista de correo de NGINX (el formulario está debajo) para recibir notificaciones sobre el lanzamiento de futuros artículos en la serie.
+
+Editor  : esta serie de artículos en siete partes ya está completa:
+
+Introducción a los microservicios
+Creación de microservicios: uso de una puerta de enlace API
+Building Microservices: comunicación entre procesos en una arquitectura de microservicios
+Descubrimiento del servicio en una arquitectura de microservicios (este artículo)
+Gestión de datos basada en eventos para microservicios
+Elegir una estrategia de implementación de microservicios
+Refactorizando un Monolito en Microservicios
+
+
+
+
