@@ -1,0 +1,102 @@
+Tolerancia a fallas en un sistema distribuido de alto volumen
+por Ben Christensen
+
+En una publicación anterior de Ben Schmaus , compartimos los principios detrás de nuestra implementación de interruptor automático. En esa publicación, Ben analiza cómo la API de Netflix interactúa con docenas de sistemas en nuestra arquitectura orientada a servicios, lo que hace que la API sea intrínsecamente más vulnerable a cualquier falla del sistema o latencias debajo de ella en la pila.
+El resto de esta publicación proporciona una inmersión más técnica en cómo nuestra API y otros sistemas aíslan las fallas, eliminan la carga y se mantienen resistentes a las fallas.
+
+La tolerancia a fallas es un requisito, no una característica
+La API de Netflix recibe más de mil millones de llamadas entrantes por día, lo que a su vez genera varios millones de llamadas salientes (promediando una proporción de 1: 6) a docenas de subsistemas subyacentes con picos de más de 100k solicitudes de dependencia por segundo.
+
+Todo esto ocurre en la nube en miles de instancias de EC2.
+
+La falla intermitente está garantizada con muchas variables, incluso si cada dependencia tiene una excelente disponibilidad y tiempo de actividad.
+
+Sin tomar medidas para garantizar la tolerancia a fallas, 30 dependencias con un 99.99% de tiempo de actividad resultarían en más de 2 horas de inactividad / mes (99.99% 30 = 99.7% de tiempo de actividad = 2+ horas en un mes).
+
+Cuando una única dependencia API falla a alto volumen con latencia incrementada (causando hilos de solicitud bloqueados) puede rápidamente (segundos o segundos) saturar todos los subprocesos de solicitud de Tomcat (u otro contenedor como Jetty) y eliminar toda la API.
+
+Por lo tanto, es un requisito de las aplicaciones de alto volumen y alta disponibilidad crear tolerancia a fallas en su arquitectura y no esperar que la infraestructura lo resuelva.
+
+Implementación de Netflix DependencyCommand
+La arquitectura orientada a servicios de Netflix permite que cada equipo tenga libertad para elegir los mejores protocolos y formatos de transporte (XML, JSON, Thrift, Protocolos de búfer, etc.) para sus necesidades, por lo que estos enfoques pueden variar de un servicio a otro.
+
+En la mayoría de los casos, el equipo que proporciona un servicio también distribuye una biblioteca de cliente Java.
+
+Debido a esto, las aplicaciones como API en efecto tratan las dependencias subyacentes como bibliotecas de cliente de terceros cuyas implementaciones son "cajas negras". Esto a su vez afecta cómo se logra la tolerancia a fallas.
+
+A la luz de las consideraciones arquitectónicas anteriores, optamos por implementar una solución que utiliza una combinación de enfoques de tolerancia a fallas:
+
+tiempos de espera y reintentos de red
+hilos separados en los grupos de subprocesos por dependencia
+semáforos (a través de tryAcquire , no una llamada de bloqueo)
+rompedores de circuito
+Cada uno de estos enfoques para la tolerancia a fallas tiene pros y contras, pero cuando se combinan entre sí proporcionan una barrera de protección completa entre las solicitudes de los usuarios y las dependencias subyacentes.
+
+La implementación de Netflix DependencyCommand envuelve una llamada de dependencia de red con una preferencia hacia la ejecución en un hilo separado y define la lógica de repliegue que se ejecuta (paso 8 en el diagrama de flujo a continuación) para cualquier falla o rechazo (pasos 3, 4, 5a, 6b a continuación ) independientemente de qué tipo de tolerancia a fallas (red o tiempo de espera de hilo, grupo de subprocesos o rechazo de semáforos, interruptor automático) lo haya activado.
+
+Decidimos que los beneficios de aislar llamadas de dependencia en hilos separados superan los inconvenientes (en la mayoría de los casos). Además, dado que la API se está moviendo progresivamente hacia una mayor concurrencia , fue un ganar-ganar para lograr la tolerancia a fallas y las ganancias de rendimiento a través de la concurrencia con la misma solución. En otras palabras, la sobrecarga de hilos separados se está convirtiendo en positiva en muchos casos de uso al aprovechar la concurrencia para ejecutar llamadas en paralelo y acelerar la entrega de la experiencia de Netflix a los usuarios.
+
+Por lo tanto, la mayoría de las llamadas de dependencia ahora enrutan a través de un grupo de subprocesos diferente como lo ilustra el siguiente diagrama:
+
+Si una dependencia se vuelve latente (el tipo de falla más desfavorable para un subsistema) puede saturar todos los subprocesos en su propio grupo de subprocesos, pero los subprocesos de solicitud de Tomcat se agotarán o se rechazarán inmediatamente en lugar de bloquearse.
+
+
+Además de los beneficios de aislamiento y la ejecución concurrente de llamadas de dependencia, también hemos aprovechado los hilos separados para permitir el colapso de solicitudes (lotes automáticos) para aumentar la eficiencia general y reducir las latencias de solicitud del usuario.
+
+Los semáforos se usan en lugar de subprocesos para las ejecuciones de dependencias que se sabe que no realizan llamadas de red (como las que solo realizan búsquedas en caché en memoria) ya que la sobrecarga de un subproceso separado es demasiado alta para este tipo de operaciones.
+
+También usamos semáforos para proteger contra retrocesos no confiables. Cada DependencyCommand puede definir una función de respaldo (se trata más adelante) que se realiza en el hilo de usuario llamante y no debe realizar llamadas de red. En lugar de confiar en que todas las implementaciones cumplan correctamente este contrato, también está protegido por un semáforo, de modo que si se lleva a cabo una implementación que implica una llamada de red y se vuelve latente, la reserva no podrá eliminar toda la aplicación ya que estará limitado en cuántos hilos podrá bloquear.
+
+A pesar del uso de subprocesos separados con tiempos de espera, continuamos configurando tiempos de espera y reintentos agresivamente en el nivel de la red (a través de la interacción con los propietarios de la biblioteca cliente, monitoreo, auditorías, etc.).
+
+Los tiempos de espera en el nivel de enhebrado DependencyCommand son la primera línea de defensa, independientemente de cómo se configure o se comporte el cliente de dependencia subyacente, pero los tiempos de espera de red siguen siendo importantes; de lo contrario, las llamadas de red altamente latentes podrían llenar indefinidamente el grupo de hilos de la dependencia.
+
+El disparo de los circuitos se inicia cuando un DependencyCommand ha superado un determinado umbral de error (como una tasa de error del 50% en un período de 10 segundos) y luego rechaza todas las solicitudes hasta que las comprobaciones de estado sean satisfactorias.
+
+Esto se usa principalmente para liberar la presión en los sistemas subyacentes (es decir, pérdida de carga) cuando están teniendo problemas y reducir la latencia de solicitud del usuario al fallar rápidamente (o devolver un repliegue) cuando sabemos que es probable que falle en lugar de hacer que cada usuario solicite espere a que se agote el tiempo de espera.
+
+¿Cómo respondemos a la solicitud de un usuario cuando ocurre una falla?
+En cada una de las opciones descritas anteriormente, un tiempo de espera, un rechazo de subprocesos o un semáforo, o un cortocircuito provocarán que una solicitud no recupere la respuesta óptima para nuestros clientes.
+
+Una falla inmediata ("falla rápida") arroja una excepción que hace que la aplicación pierda carga hasta que la dependencia recupere la salud. Esto es preferible a las solicitudes de "acumulación" ya que mantiene a Tomcat solicitando subprocesos disponibles para atender las solicitudes de dependencias saludables y permite una recuperación rápida una vez que las dependencias fallidas se recuperan.
+
+Sin embargo, a menudo hay varias opciones preferibles para proporcionar respuestas en un "modo alternativo" para reducir el impacto de la falla en los usuarios. Independientemente de qué causa una falla y cómo se intercepta (tiempo de espera, rechazo, cortocircuito, etc.), la solicitud siempre pasará por la lógica alternativa (paso 8 en el diagrama de flujo anterior) antes de regresar al usuario para darle a DependencyCommand la oportunidad de hacer algo más que "fallar rápido".
+
+Algunos enfoques de los retrocesos que utilizamos son, en orden de su impacto en la experiencia del usuario:
+
+Caché: recupera datos de cachés locales o remotos si la dependencia en tiempo real no está disponible, incluso si los datos terminan siendo obsoletos
+Consistencia eventual: las escrituras en cola (como en SQS ) se conservarán una vez que la dependencia esté disponible nuevamente
+Datos copiados: vuelve a los valores predeterminados cuando las opciones personalizadas no se pueden recuperar
+Respuesta vacía ("Fail Silent"): devuelve una lista nula o vacía que las IU pueden ignorar
+Todo este trabajo es para mantener el máximo tiempo de actividad para nuestros usuarios mientras se mantiene el máximo número de características para que puedan disfrutar de la experiencia de Netflix más rica posible. Como resultado, nuestro objetivo es lograr que los reembolsos brinden respuestas lo más cercano a lo que ofrecería la dependencia real.
+
+Ejemplo de caso de uso
+A continuación se muestra un ejemplo de cómo se combinan los hilos, tiempos de espera de red y reintentos:
+
+El diagrama anterior muestra una configuración de ejemplo donde la dependencia no tiene razón para alcanzar el percentil 99.5 y por lo tanto corta en la capa de tiempo de espera de la red e inmediatamente vuelve a intentar con la expectativa de obtener latencia mediana la mayor parte del tiempo, y lograr esto dentro del 300 ms de tiempo de espera del hilo.
+
+Si la dependencia tiene motivos legítimos para alcanzar el percentil 99.5 (es decir, falta de memoria caché con generación diferida), el tiempo de espera de la red será mayor, como en 325ms con 0 o 1 reintentos y el tiempo de espera del subproceso será mayor (350ms +) .
+
+El grupo de subprocesos tiene un tamaño de 10 para manejar una ráfaga de solicitudes de percentil 99, pero cuando todo está sano, este subproceso generalmente solo tendrá 1 o 2 subprocesos activos en un momento dado para atender principalmente llamadas medianas de 40 ms.
+
+Cuando se configura correctamente, un tiempo de espera en la capa DependencyCommand debe ser raro, pero la protección está ahí en caso de que algo que no sea latencia de red afecte el tiempo o la combinación de connect + read + retry + connect + read en el peor de los casos supera el configurado tiempo de espera general.
+
+La agresividad de las configuraciones y las compensaciones en cada dirección son diferentes para cada dependencia.
+
+Las configuraciones se pueden cambiar en tiempo real según sea necesario a medida que cambian las características de rendimiento o cuando se encuentran problemas sin arriesgar la desinstalación de toda la aplicación si ocurren problemas o configuraciones incorrectas.
+
+Conclusión
+Los enfoques discutidos en esta publicación han tenido un efecto dramático en nuestra capacidad para tolerar y resistir las fallas en el sistema, la infraestructura y el nivel de aplicación sin afectar (o limitar el impacto) a la experiencia del usuario.
+
+A pesar del éxito de este nuevo sistema de resistencia DependencyCommand durante los últimos 8 meses, aún nos queda mucho por hacer para mejorar nuestras estrategias y el rendimiento de tolerancia a fallas, especialmente a medida que continuamos agregando funcionalidad, dispositivos, clientes y mercados internacionales.
+
+Si este tipo de desafíos le interesan, el equipo de API está contratando activamente:
+
+Ingeniero Senior de Software - Plataforma API
+Ingeniero Senior de Software - API
+Gerente de Ingeniería - API
+
+
+
+
+
