@@ -1,0 +1,117 @@
+Escalar con agilidad
+(http://www.julianbrowne.com/article/scaling-agility)
+Engañosamente simple, pero infinitamente complicado
+
+01 de diciembre de, el año 2016 . Archivado en: desarrollo , ágil
+Han pasado quince años desde que se publicó el Manifiesto para el desarrollo ágil de software . Desde entonces parece que la mayoría de las grandes compañías han intentado hacerse más ágiles. O agregando 'ágil' como otra metodología junto con cascada en su marco de proceso, o embarcándose en un Programa de Transformación, involucrando a muchos consultores altamente remunerados que vienen con un certificado que dice que pueden recitar palabra por sistema de proceso ágil.
+
+
+
+De las empresas que han tenido éxito en "agilidad", algunas han tenido una buena experiencia: un único proyecto entregado sin sorpresas desagradables, por un equipo inusualmente pequeño y con poco alboroto (al menos internamente para el equipo del proyecto, es bastante común para que haya mucho alboroto por parte de las personas que protegen el proceso establecido). Pero luego esa buena experiencia resulta imposible de repetir, o ampliarse en todo el negocio.
+
+Otros tuvieron una mala experiencia y escribieron agile como una moda, o simplemente un vehículo de entrega alternativo a la cascada, y volvieron a cualquier proceso que tuvieran antes, prefiriendo al diablo que conocen a algo que "solo funciona para nuevas empresas".
+
+De cualquier manera, los procesos de entrega de software volvieron a ser algo doloroso, impredecible y generalmente desagradable para trabajar dentro, a veces con algunos restos ágiles y falsos, como stand ups diarios y tarjetas en la pared para hacer que el lugar no se sintiera tan en la década de 1990.
+
+Y sin embargo, aquí está la cosa: el desarrollo de software es un problema ampliamente resuelto
+
+Los desarrolladores de software que tengan experiencia real con prácticas ágiles estarían de acuerdo en eso. Nadie dice que el desarrollo de software es fácil, o que hay una receta mágica, solo que somos bastante buenos hoy en día para abordar problemas complejos en piezas pequeñas, diseñando sobre la marcha, trabajando en pequeños equipos para probar nuestro software a medida que emerge y comunicándonos a clientes lo que pueden y no pueden tener.
+
+Pero puedo decirle que cada CIO con el que he hablado en los últimos diez años no está de acuerdo. Puede haber muchas cosas ahora que hayan tenido alguna forma de "experiencia ágil", pero todas cuentan una historia similar: aparecieron unas pocas alecs inteligentes, hicieron algo innovador que duró tal vez un año o dos, y por razones que son difíciles para identificar, o el proyecto se convirtió en otro desastre de TI para limpiar, o tratar de repetirlo simplemente no funcionó.
+
+Sin embargo, la llamada amenaza digital es real. Los CIO se ven como dinosaurios en comparación con las cincuenta nuevas empresas en una trayectoria aterradora para venir a comer su almuerzo. Estas nuevas empresas no van a desaparecer y con cada año que pasa las barreras para ingresar al mercado son cada vez más bajas. Y estas nuevas empresas son ágiles en sus huesos. No necesitan una iniciativa de Transformación Digital para mejorar en la entrega. Lanzaron el libro de reglas en el contenedor hace años. Los gerentes de empresa pueden usar el término 'start-up' para decir despectivamente amateur o inconsecuente, pero estas compañías son todo lo contrario. Están valorados en miles de millones, bien financiados y en su mayoría amados por sus clientes. El hombre del boogie existe. Si eres un CIO, estos son tiempos desesperados.
+
+Y la desesperación es algo peligroso, porque las consultorías pueden olerla a kilómetros de distancia. Donde hay miedo y malestar, hay una solución brillante y costosa que espera ser empaquetada y vendida. Y con ágil y digital, es el Marco Ágil Escalado y cualquiera de las otras metodologías "estructuradas" que pretenden convertir su pesada estructura burocrática de entregas en Facebook.
+
+No me opongo a ganar dinero vendiendo ideas y consejos. Algunas técnicas ágiles pueden ser un poco complicadas y sin duda vale la pena pagarlas en beneficio de la experiencia y la experiencia en la entrega que tanto costó ganar. Lo que no puedo aceptar es el codicioso cinismo que apuntala estos esquemas estructurados comercialmente, vendiendo lo que en última instancia es sentido común (aunque a veces sea un sentido común contra intuitivo).
+
+Como clientes, también estamos comprando. Se está ayudando e instigado por legiones de gerentes de proyectos fallidos, que salen para la certificación de scrum (todas las 16 horas de entrenamiento), y se autoproclaman como entrenadores ágiles. A menos que realmente consigas lo que significa desarrollar con agilidad, y hayas hecho más que solo leer sobre ello, no tienes ningún motivo para vender consejos a otros. Hay un poco más que un gran diagrama y un manual. O lanzando términos como 'épico' y 'velocidad' sin comprender lo que significan. O sugiriendo nuevas herramientas porque Netflix lo hace. Su empresa puede beneficiarse de un mono del caos, pero no tiene que serlo.
+
+La situación es tan mala que provocó que Dave Thomas , uno de los signatarios del Manifiesto para el Desarrollo de Software Ágil (y no, como él dice, el manifiesto ágil, o el manifiesto que es ágil en sí mismo), declare que Agile está muerto y renacido. en las llamas del sentido común como agilidad, porque no puedes vender un adjetivo, solo puedes vender sustantivos. Puedes verlo hablar de ello en YouTube .
+
+Así que hablemos un poco sobre lo que realmente es la agilidad y por qué no puede comprarla en Accenture o certificarse en ella durante unos pocos almuerzos. Dave Thomas comienza su argumento con la declaración clara de que, cuando se le presenta un problema, ninguno de nosotros sabe qué hacer. Eso, para mí, es el primer paso en el camino hacia la iluminación, aceptar que cuando comenzamos un proyecto, o discutimos una idea de producto, o una estrategia, o de hecho cualquier esfuerzo, en realidad no sabemos qué hacer. Podemos tener ideas. Incluso podemos tener ideas muy fuertes. Nuestras ideas pueden estar basadas en la experiencia. Pero sean estos, no sabemos con 100% de seguridad si funcionarán. O si seguirán siendo la respuesta correcta dentro de seis meses.
+
+¿Y sabes qué? Eso está realmente bien. Somos humanos y aunque vivimos en un mundo que cambia con el tiempo, incluso los mejores de nosotros tenemos que ajustar nuestro pensamiento a medida que avanzamos.
+
+Tomar de la mano y decirlo conmigo: no tenemos ni la más mínima idea de cómo vamos a desarrollar esa nueva máquina digital de aprendizaje de máquinas de comercio electrónico de Big Data, y la verdad nos hará libres. Porque ahora estamos listos para encontrar el camino correcto. Y eso requiere agilidad. Agilidad para cambiar nuestra solución a medida que aparece nueva evidencia. Agilidad para trabajar con otros a medida que se agregan al panorama general. Incluso la agilidad de experimentar con nuestro enfoque para resolver el problema. Después de todo, si no sabemos cuál es la solución, ¿podemos admitir que tampoco conocemos el enfoque correcto para encontrarla?
+
+Dave Thomas sugiere lo siguiente como su definición de agilidad en esta situación:
+
+Descubre dónde estás
+Dé un pequeño paso hacia su meta (y si hay varias opciones aquí, tome el camino de menos arrepentimiento, o el que hace que el cambio en el futuro sea más fácil)
+Ajuste su comprensión en función de lo que aprendió
+Repetir
+Y si alguna vez hubo un ejemplo de lo profundo en lo mundano, eso es todo. Obviamente hay un poco más de lo que podríamos llamar las normas de agilidad prevalecientes que eso, de lo contrario todos estaríamos inventando todo desde cero cada vez, pero todos los métodos que componen las técnicas ágiles estándar se derivaron de esta manera. La programación extrema de Kent Beck comprende 12 prácticas que encontraron su encarnación extrema al identificar algo que era bueno (el objetivo) y tomar medidas para alcanzarlo hasta que se lograra la versión óptima de la meta.
+
+La calidad del código es algo bueno (un objetivo) y sabemos que las revisiones del código pueden ayudar a mejorarlo. Pero las revisiones formales del código son largas y dispendiosas y, a menudo, suceden un tiempo después de que se escribió el código (perdiendo así el contexto). Hacer la revisión más cerca del momento en que se crea el código es un pequeño paso hacia la meta. Tener dos desarrolladores colaborando en el problema significa que la revisión y la creación suceden al mismo tiempo. ¿Es contrario a la intuición? Sí, ciertamente es para muchos, que ven la programación de pares como si pagaran a dos desarrolladores para resolver el mismo problema. Y para los programadores que no están acostumbrados, puede ser un poco doloroso. Pero luego nos alejamos de marchar todo el tiempo hacia el emparejamiento cuando es útil. O bien, use las solicitudes de extracción para aplicar un proceso de revisión continuo. Lo que sea que funcione para el equipo.
+
+No hay absolutos La Programación de Par sin duda puede ser útil para mejorar la calidad del código. Burlarse de los que no lo hacen no es útil si el objetivo es mejorar la agilidad en el desarrollo (aunque es muy útil cuando el objetivo es inútil discutir sobre quién es el desarrollador más inteligente de la sala). Si un equipo es resistente al emparejamiento en cualquier forma, entonces bien, elige otra cosa para probar en su lugar.
+
+Cuando sus iteraciones de desarrollo son cortas, el siguiente ciclo de verificación y ajuste está a solo unos días de distancia. Las malas decisiones pueden corregirse y las buenas pueden continuar, o incluso mejorarse. Es por eso que la agilidad es un trabajo duro. Requiere un enfoque continuo y una disciplina rigurosa. Sospecho que es en parte por qué falla en algunos lugares, porque no hay tiempo para holgazanear o tener muchas reuniones. Un gran maestro de scrum con el que trabajé dijo una vez: "la mejor característica de la entrega de cascada es que le da dos años para encontrar otro trabajo". Con iteraciones cortas, las preguntas pueden ser más pequeñas pero se vuelven gruesas y rápidas.
+
+En ningún momento la respuesta implica buscar en el libro que nos dice qué hacer. No hay libro Hay muchos libros, puntos de vista, blogs y artículos para usar como elementos de reflexión. Pero no hay una sola respuesta. Y eso no debería ser una perspectiva aterradora. En una reunión de empresa promedio, puede haber más de cien años de conocimiento de dominio en la sala. ¿Cómo podría un extraño pensar que puede venir con la respuesta preparada que se adapta a su organización?
+
+Por eso es difícil explicar esto:
+
+
+
+Ese diagrama, derechos de autor y propiedad de Scaled Agile Incorporated. Representa el Marco Ágil Escalado. Tómese un momento para maravillarse de todo el diseño inicial que entró en eso. Todas las palabras correctas están ahí, tal como las utilizan las oficinas de administración de programas, los planificadores financieros y los arquitectos en todo el mundo, lo que seguramente minimizará cualquier resistencia a su implementación. Ningún nuevo proceso estaría completo sin una profusión de opciones de entrenamiento , de modo que los pocos ungidos puedan emitir sus certificados en la gran sucia.
+
+Y mire la gran marca de verificación al final del proceso que dice "calidad incorporada". ¿Ah, la calidad está incorporada? Perdónenme y envíen la factura del Gold Partner Level 82.
+
+Antes de continuar, considere que ninguno de los signatarios del Manifiesto para el desarrollo ágil de software ha aprobado el marco Agile escalado. Pero algunas personas han tenido menos que cosas complementarias que decir al respecto:
+
+Inseguro a cualquier velocidad
+SEGURO: Bueno pero no lo suficientemente bueno
+The Horror the Scaled Agile Framework
+Algunos incluso han encontrado sus propias alternativas, como LAFABLE
+
+Pero no es una cuestión de risa. ¿Recuerdas al desesperado CIO del que hablamos al principio? Deben tomar decisiones difíciles para cambiar su organización y es probable que solo tengan una oportunidad. No es bueno colgar un manifiesto frente a ellos y burlarse de las consultorías. Las grandes consultorías tienen mucha influencia en las organizaciones empresariales. No existe una relación deferente de proveedor / cliente para ellos. Si creen que el CIO no se tragará su programa de capacitación SAFe de dos años, solo necesitan susurrar en silencio al oído del CEO "¿Estás seguro de que quieres correr ese riesgo? Somos Gold Partner Level 82 SAFe Practitioners y su alternativa parece ser un manifiesto, un proceso de cuatro pasos y algunas bromas infantiles ".
+
+Diablos no Serías un valiente CIO para dar el salto.
+
+Un comentario que escuché mucho es "pero ágil no tiene nada que decir sobre la ampliación". Y eso es cierto. No es así Cuando esas 17 personas se fueron a debatir sobre mejores formas de crear software, estaban pensando en derrotar el proceso dominante y el pensamiento retrógrado que impedía que los equipos individuales hicieran las cosas. Cómo esa escala es un problema diferente por completo. Los principios del scrum (aceptar que el scrum no es suficiente por sí solo ) se refieren al trabajo en equipo, no a la administración de carteras, la planificación financiera o la integración entre productos.
+
+¿Cómo funciona la escala ágil? es la pregunta equivocada
+
+Piensa en cocinar (lo sé, ten paciencia conmigo por un párrafo). Una salsa de queso se compone de un roux (una mitad y mitad de la mezcla de mantequilla y harina) que se cocina un poco, luego un poco de leche y finalmente un poco de queso. Pero la receta no es rígida. Algunas variantes calientan la leche con hojas de laurel. Algunos usan quesos mezclados, o agregan pimienta blanca, o negro, o ambos. Toma ese roux y agrega algo de caldo en lugar de queso y leche, y tienes un Sauce Espagnol , una de las salsas madre de Escoffier., de la cual se desarrollan muchos platos franceses. Tira un roux en una sopa y estás a medio camino de un guiso. Cambia la mantequilla por grasa de tocino y tienes un Cajun Roux. Cocinar se compone de cientos de pequeños métodos que se pueden combinar y recombinar para producir cosas increíbles. Puede comprar libros de recetas para aprender las técnicas y pedir opiniones a cocineros experimentados.
+
+¿Por qué es relevante esa excursión a la cocina? Bueno, porque si nuestros proyectos implicaran hacer el mismo queso macaroni todos los días, estaría listo para un proceso predefinido para estandarizarlo y optimizarlo. Si comes en McDonalds, eso es exactamente lo que tienen. Pueden optimizar continuamente un proceso y escalarlo, porque todos los días hacen lo mismo. Nosotros no. Como creadores de software (y yo incluimos todos los roles en esa definición), se nos pide que afrontemos desafíos nuevos y maravillosos todo el tiempo. Los macarrones del año pasado están muertos, gente. Todo lo que puede hacer es acordar el objetivo y dar un pequeño paso educado hacia él. Cuantas más habilidades y experiencia tenga, más fáciles serán esos pasos. Es por eso que los equipos ágiles son autoorganizados, no porque tengan que ser interrumpidos con menos frecuencia por otros equipos (aunque es un buen efecto colateral) sino porque tienen que encontrar constantemente la mejor alternativa para hacer, y su éxito o fracaso se comparte. Tan pronto como 'escala' las prácticas del equipo, untando una especie de scrum medio cocido en el organigrama, el equipo en la parte inferior ya no puede trabajar con agilidad. Eso es lo que hace SAFe.
+
+Algunos otros fastidios para buscar que las metodologías ágiles escaladas subviertan:
+
+Un equipo debe contener dentro de sí todos los roles necesarios que se requieren para mantener el flujo de trabajo. Si el equipo tiene que reunirse con otros equipos para lograr eso, entonces el proceso se rompe. Eso no quiere decir que algunas reuniones no son necesarias, por supuesto que sí, pero no relacionadas con las decisiones por hora de qué hacer a continuación.
+
+Un equipo debe ser capaz de entregar software en producción en el momento en que crean que es correcto hacerlo. De lo contrario, lo que tienes es algo más parecido a lo que Dave West llamó " agua-scrum-fall" , donde las puertas de cascada rodean a un equipo de reparto parecido al scrum que tendrá dificultades para hacer lo correcto o hacer lo correcto en la producción. es decir, 'hecho' debería significar 'hecho'
+
+Hablando de 'hecho' - una iteración es donde sucede lo hecho. No hay iteraciones especiales de endurecimiento / prueba / reelaboración que vendrán después. La calidad proviene de terminar el trabajo mientras aún lo piensas. Llamar a algo "potencialmente" liberable es lo mismo que decir que desperdiciaste tu tiempo y el dinero de la compañía. Yoda es tu amigo aquí: hazlo, o no, no hay intento .
+
+Al construir un producto, el proceso (cualquiera que sea) debe apoyar el desarrollo iterativo, no incremental. Si su sitio web necesita una página de inicio de sesión, cree la más simple e iterativamente mejore hasta que sea lo suficientemente buena para el lanzamiento (que podría ser antes de lo que cree). Abordar el problema gradualmente significaría terminar todas las características de la página de inicio de sesión antes de pasar a algún otro aspecto del sitio. Me gusta el resumen de Alistair Cockburn, que es que el pensamiento incremental es bueno para la mejora del proceso (por lo que los gerentes de proyecto son peligrosos en torno a equipos ágiles), mientras que iterativo es mejor para la mejora del producto. Este diagrama es antiguo pero resume la diferencia muy bien.
+
+Luego está el concepto del tren de lanzamiento ágil . No sé por dónde empezar con eso. Para ser honesto, si alguien piensa que 5-12 equipos (es decir, entre 50 y 125 personas) trabajan en una organización virtual durante 10 semanas, seguido de más iteraciones especializadas para endurecimiento, liberación, prueba o lo que sea, no es solo una cascada disfrazada. están más allá de la salvación. Para ser justos, SAFe no promueve los sprints especiales, pero sí los permite. Prefiero que los equipos se fijen el objetivo de publicar cada mes, luego cada semana y luego todos los días.
+
+Y finalmente una palabra sobre arquitectura, que en verdad es lo que más me molesta de SAFe. Es la metáfora del pensamiento grande. Es la idea de que la única forma de hacer algo ambicioso es que los equipos trabajen juntos en algo grande. No simplemente no. ¿Somos tan gordos que alguien cree que alguna vez funcionó? John Gall en 1975 dijo:
+
+Se encuentra invariablemente que un sistema complejo que funciona ha evolucionado a partir de un sistema simple que funcionó. Un sistema complejo diseñado desde cero nunca funciona y no se puede reparar para que funcione. Tienes que comenzar de nuevo con un sistema simple que funcione.
+
+Los equipos realmente ágiles funcionan porque: a) se ven obligados a ser pequeños, lo que significa que b) limitan naturalmente la complejidad que pueden manejar, lo que significa que c) solo pueden entregar sistemas simples que funcionen. Creo que podría ser una minoría al creer que todavía se necesitan arquitectos para apoyar a esos equipos en la producción de sistemas simples que cooperen, pero lo que sea. El punto es que es relativamente fácil asumir lo ambicioso sin que los equipos den parte de una metáfora de tren mutilada verbalmente.
+
+Las prácticas ágiles se inspiraron en Lean Manufacturing (un gran y muy legible libro sobre Lean, por cierto, es "La máquina que cambió el mundo" de Womack, Jones y Roos. Tiene 26 años, pero entonces también es delgado). Los métodos Lean son, como es lógico, de naturaleza similar a la descripción que Dave Thomas utilizó para la agilidad:
+
+Nunca produzca nada hasta que el cliente lo quiera
+Defina siempre claramente qué valor quiere el cliente, no necesariamente lo que pide
+Defina los pasos del flujo del proceso que entrega el valor del cliente y siempre mantenga el flujo de valor en movimiento
+Mejore continuamente el flujo de valor y su comprensión del cliente
+Scrum y XP aplican este pensamiento a los equipos (y hemos tenido 15 años para desafiar, mejorar y optimizar ese pensamiento) pero también se puede aplicar a otras partes de la organización directamente (sujeto al mismo ciclo de mejora). Eche un vistazo a Lean Enterprise, de Jez Humble, Joanne Molesky y Barry O'Reilly, para obtener más información sobre cómo los principios lean se pueden aplicar a las empresas más grandes.
+
+¿Quieres escalar 'ágil' a la gestión de cartera? Luego, deje de planear las cosas un año antes. Deje de calcular grandes programas de trabajo que no comprende (cuando, como ya hemos mencionado, el equipo ágil aún no sabe cómo abordarlo). Si no está claro lo que quiere el cliente, entonces no lo haga. Haga algo que tenga un valor claro o un beneficio económico en su lugar.
+
+Y recuerde una cosa sobre todo: el objetivo de un negocio de consultoría es crecer usando el dinero que recauda de sus clientes. Los marcos de procesos son seductores porque nos hacen sentir seguros (sin juego de palabras) mientras intentamos cambiar. No hay nada de malo en querer sentir el control. Pero mantén el control. Es asunto tuyo, no de ellos. Cuando vea la casa hecha de tortas y dulces y las ventanas de azúcar, no la coma. Sí, se ve delicioso, pero ese es todo el sentido. Date la vuelta y sigue las migas de regreso a casa y prueba de otra manera.
+
+Notas
+
+La pintura es Muchachos trepando a un árbol (chicos trepando a un árbol) por Francisco de Goya y Lucientes
+
+Este artículo fue publicado originalmente en LinkedIn
+
+El subtítulo es una cita parafraseada de Arnold Palmer que describía el golf. La cita completa es "Golf es engañosamente simple e infinitamente complicado; satisface el alma y frustra el intelecto. Es al mismo tiempo gratificante y enloquecedor, y es sin duda el juego más grande que la humanidad haya inventado jamás ". Podría haber descrito tan fácilmente el desarrollo de software.
