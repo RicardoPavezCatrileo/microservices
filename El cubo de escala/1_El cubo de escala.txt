@@ -1,0 +1,31 @@
+El cubo de escala
+El libro, El arte de la escalabilidad , describe un modelo de escalabilidad tridimensional realmente útil: el cubo de escala .
+
+En este modelo, escalar una aplicación ejecutando clones detrás de un equilibrador de carga se conoce como escalamiento del eje X. Los otros dos tipos de escalado son el escalado del eje Y y el escalado del eje Z. La arquitectura de microservicio es una aplicación del escalado del eje Y, pero también observemos el escalado del eje X y el eje Z.
+
+Escalado del eje X
+La escala del eje X consiste en ejecutar múltiples copias de una aplicación detrás de un equilibrador de carga. Si hay N copias, cada copia maneja 1 / N de la carga. Este es un enfoque simple y comúnmente utilizado para escalar una aplicación.
+
+Una desventaja de este enfoque es que debido a que cada copia tiene acceso potencial a todos los datos, las memorias caché requieren más memoria para ser efectivas. Otro problema con este enfoque es que no aborda los problemas de aumentar el desarrollo y la complejidad de las aplicaciones.
+
+Escalado del eje Y
+A diferencia del eje X y el eje Z, que consisten en ejecutar múltiples copias idénticas de la aplicación, la escala del eje Y divide la aplicación en múltiples servicios diferentes. Cada servicio es responsable de una o más funciones estrechamente relacionadas. Hay un par de maneras diferentes de descomponer la aplicación en servicios. Un enfoque es usar la descomposición basada en verbos y definir servicios que implementan un solo caso de uso, como el pago y envío. La otra opción es descomponer la aplicación por sustantivo y crear servicios responsables de todas las operaciones relacionadas con una entidad particular, como la administración de clientes. Una aplicación puede usar una combinación de descomposición basada en verbos y sustantiva.
+
+Escala del eje Z
+Al usar la escala del eje Z, cada servidor ejecuta una copia idéntica del código. A este respecto, es similar al escalado del eje X. La gran diferencia es que cada servidor es responsable de solo un subconjunto de los datos. Algunos componentes del sistema son responsables de enrutar cada solicitud al servidor apropiado. Un criterio de enrutamiento comúnmente utilizado es un atributo de la solicitud, como la clave principal de la entidad a la que se accede. Otro criterio de enrutamiento común es el tipo de cliente. Por ejemplo, una aplicación puede proporcionar a los clientes que pagan un SLA más alto que los clientes gratuitos al enrutar sus solicitudes a un conjunto diferente de servidores con más capacidad.
+
+Las divisiones del eje Z se usan comúnmente para escalar bases de datos. Los datos se particionan (es decir, fragmentados) en un conjunto de servidores en función de un atributo de cada registro. En este ejemplo, la clave principal de la tabla RESTAURANT se usa para dividir las filas entre dos servidores de bases de datos diferentes. Tenga en cuenta que la clonación del eje X se puede aplicar a cada partición mediante la implementación de uno o más servidores como réplicas / esclavos. La escala del eje Z también se puede aplicar a las aplicaciones. En este ejemplo, el servicio de búsqueda consiste en una cantidad de particiones. Un enrutador envía cada elemento de contenido a la partición adecuada, donde se indexa y almacena. Un agregador de consultas envía cada consulta a todas las particiones y combina los resultados de cada una de ellas.
+
+La escala del eje Z tiene una serie de beneficios.
+
+
+Cada servidor solo trata con un subconjunto de los datos.
+Esto mejora la utilización de la memoria caché y reduce el uso de memoria y el tráfico de E / S.
+También mejora la escalabilidad de las transacciones ya que las solicitudes se distribuyen típicamente en varios servidores.
+Además, la escala del eje Z mejora el aislamiento de fallas ya que una falla solo hace que una parte de los datos esté accesible.
+La escala del eje Z tiene algunos inconvenientes.
+
+Un inconveniente es una mayor complejidad de la aplicación.
+Necesitamos implementar un esquema de particionamiento, que puede ser complicado, especialmente si alguna vez necesitamos reparticionar los datos.
+Otro inconveniente de la escala del eje Z es que no resuelve los problemas de aumentar el desarrollo y la complejidad de la aplicación. Para resolver estos problemas tenemos que aplicar la escala del eje Y .
+
