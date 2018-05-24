@@ -1,0 +1,234 @@
+https://www.swapbytes.com/teorema-cap-base-datos/
+
+El teorema CAP en base de datos
+Éste post me parece muy importante para poder entender como funcionan y hacer grandes sistemas pensados para escalar, sea por tráfico, por multi-sitio, multi-país, y más… todos estos sistemas distribuidos presentan la misma particularidad, y en el año 2000 un señor llamado Eric Brewer, pudo definir tres importantes propiedades y desarrollo un teorema. El se dio cuenta que mientras más aplicaciones basadas en la WEB existan, menos debemos preocuparnos por la consistencia de los datos, si queremos alta disponibilidad de nuestras aplicaciones entonces no podemos garantizar la consistencia de los datos.
+
+El teorema CAP, también llamado formalmente Teorema de Brewer, dice que un sistema de datos distribuido pude asegurar dos de estas tres propiedades: Consistencia, Disponibilidad y Tolerancia al particionado. Bien, que significa cada una:
+
+La consistencia (Consistency), Todos los nodos deben ver los mismos datos al mismo tiempo, esto quiere decir que; cualquier cambios en los datos se debe aplicar en todos los nodos, y cuando se recupere el dato tiene que ser el mismo en todos los nodos. Esto se le llama consistencia atómica, y se consigue replicando la información en todos los nodos.
+La disponibilidad (Availability), Cada petición en un nodo debe recibir y garantizar una confirmación si ha sido resuelta satisfactoriamente. En pocas palabras, se debe leer y escribir en todos los nodos.
+La tolerancia al particionado (Partition Tolerance), El sistema debe funcionar a pesar de que haya sido dividido por un fallo de comunicación, garantizando la disponibilidad a pesar que un nodo se separe del grupo sin importar la causa.
+
+El teorema solo nos puede garantizar las siguientes combinaciones:
+
+CP (Consistency & Partition): El sistema aplicara los cambios de forma forma consistente y aunque se pierda la comunicación entre nodos ocacionando el particionado, no se asegura que haya disponibilidad.
+AP (Availability & Partition): El sistema siempre estará disponible a las peticiones aunque se pierda la comunicación entre los nodos ocacionando el particionado, y en consecuencia por la perdida de comunicación existirá inconsistencia porque no todos los nodos serán iguales.
+CA (Consistency & Availability): El sistema siempre estará disponible respondiendo las peticiones y los datos procesados serán consistentes. En este caso no se puede permitir el particionado.
+La correcta decisión de que combinación necesitamos depende de nuestras necesidades de negocio. Nunca olvide que lo más importante en una base de datos relacional es la Consistencia. Conociendo el teorema CAP, nos puede ayudar aún más para saber que Sistemas de Base de Datos debemos escoger, si un SQL o un NoSQL. Si queremos profundizar más en el tema, recomiendo este post.
+
+http://www.julianbrowne.com/article/brewers-cap-theorem
+
+Teorema CAP de Brewer
+La ayuda kool Amazon y Ebay han estado bebiendo
+11 de enero de 2009 . Archivado en: arquitectura , negocios , estrategia
+El viernes 4 de junio de 1976, en una pequeña sala de arriba, lejos del auditorio principal del concierto, los Sex Pistols dieron inicio a su primer concierto en el Lesser Free Trade Hall de Manchester . Hay cierta confusión acerca de quién estuvo exactamente allí en la audiencia esa noche, en parte porque hubo otro concierto solo seis semanas después, pero principalmente porque se considera que fue un concierto que cambió la cultura de la música occidental para siempre. Tan icónico e importante tiene esa apariencia que David Nolan escribió un libro, Juro que estuve allí: El concierto que cambió el mundo , investigando a los que afirmaron haber estado presentes fue justificado. Porque el 4 de junio generalmente se considera la génesis del punk rock 6 .
+
+
+
+Conocemos tres acordes, pero solo puedes elegir dos
+
+Antes de esto (de hecho alrededor de 1971) hubo una serie de bandas protopunk , como las New York Dolls y el Velvet Underground , pero fue esta, ambientada por los Sex Pistols, que en el folklore musical comenzó la revolución que se estableció mueve las guitarras de los Buzzcocks , los quejumbrosos gemidos de The Smiths , las síncopas eclécticas de The Fall , la creciente majestad de Joy Division y Simply Red (supongo que no puedes tener todo).
+
+El miércoles 19 de julio de 2000, no puede bajar en la cultura popular con la misma magnitud, pero ha tenido un impacto similar en los negocios de escala de Internet como lo hicieron Sex Pistols en la música un cuarto de siglo antes, porque ese fue el discurso principal de Eric Brewer en el Simposio de ACM sobre los Principios de Computación Distribuida (PODC).
+
+Los Sex Pistols habían demostrado que la furia apenas limitada era más importante para sus contemporáneos que el estructuralismo de la escuela de arte, que le daban a cualquiera tres acordes y algo para decir permiso para comenzar una banda. Eric Brewer, en lo que se conoce como Brewer's Conjecture, dijo que a medida que las aplicaciones se vuelven más basadas en web deberíamos dejar de preocuparnos por la coherencia de los datos, porque si queremos alta disponibilidad en estas nuevas aplicaciones distribuidas, entonces la consistencia garantizada de los datos es algo que no podemos tener , dando así a cualquiera con tres servidores y un buen ojo para el permiso de experiencia del cliente para iniciar un negocio de escala de Internet. Disciples of Brewer (presente ese día o más adelante) incluye Amazon , EBay y Twitter .
+
+Dos años más tarde, en 2002, Seth Gilbert y Nancy Lynch del MIT, demostraron formalmente que Brewer estaba en lo cierto y así nació el Teorema de Brewer.
+
+Teorema de Brewer (CAP)
+
+Entonces, ¿qué es exactamente el Teorema de Brewer, y por qué merece comparación con un concierto de punk de 1976 en Manchester?
+
+La charla de Brewer en 2000 se basó en su trabajo teórico en UC Berkley y las observaciones de Inktomi , aunque Brewer y otros hablaron de decisiones de compromiso que deben tomarse en sistemas altamente escalables años antes (por ejemplo, " Servicios de red escalables basados ??en clústeres " ). "De SOSP en 1997 y" Cosecha, rendimiento y sistemas escalables tolerantes "en 1999) por lo que los contenidos de la presentación no eran nuevos y, como muchas de estas ideas, fueron obra de muchas personas inteligentes (como estoy seguro) Brewer mismo sería rápido de señalar).
+
+Lo que dijo fue que hay tres requisitos básicos sistémicos que existen en una relación especial cuando se trata de diseñar e implementar aplicaciones en un entorno distribuido (hablaba específicamente de la web, pero muchas empresas corporativas son multisitio / multipaís. días en que los efectos podrían aplicarse igualmente a su arreglo de centro de datos / LAN / WAN).
+
+Los tres requisitos son: consistencia , disponibilidad y tolerancia de partición , dando al teorema de Brewer su otro nombre: CAP .
+
+Para darles un sentido real, usemos un ejemplo simple: usted quiere comprar una copia de Tolstoy 's War & Peace para leer en unas vacaciones particularmente largas que está comenzando mañana. Su librería web favorita tiene una copia disponible en stock. Haga su búsqueda, verifique que pueda entregarse antes de irse y agréguela a su cesta. Recuerda que necesita algunas otras cosas para navegar por el sitio por un tiempo (¿Alguna vez ha comprado una sola cosa en línea? ¿Tiene que maximizar el paquete de dólares?). Mientras lee los comentarios de los clientes sobre un producto bronceador, alguien, en otro lugar del país, llega al sitio, agrega una copia a su cesta y va directo al proceso de compra (necesitan una solución urgente para una mesa tambaleante) con una pierna mucho más corto que los demás).
+
+Consistencia
+
+Un servicio consistente funciona completamente o no funciona en absoluto. Gilbert y Lynch usan la palabra "atómico" en lugar de consistente en su prueba, lo que tiene más sentido técnicamente porque, estrictamente hablando, es consistente la C en ACID aplicada a las propiedades ideales de las transacciones de bases de datos y significa que los datos nunca se conservarán rompe ciertas restricciones preestablecidas. Pero si se considera una restricción preestablecida de los sistemas distribuidos que no se permiten valores múltiples para el mismo dato, entonces creo que la fuga en la abstracción está tapada (además, si Brewer hubiera usado la palabra atómico, se llamaría AAP). el teorema y todos estaríamos en el hospital cada vez que tratáramos de pronunciarlo).
+
+En el ejemplo de compra de libros, puede agregar el libro a su cesta o fallar. Compralo, o no. No puedes medio añadir o medio comprar un libro. Hay una copia en existencia y solo una persona la recibirá al día siguiente. Si ambos clientes pueden continuar a través del proceso de pedido hasta el final (es decir, realizar el pago), la falta de consistencia entre lo que está en existencia y lo que hay en el sistema causará un problema. Tal vez no es un gran problema en este caso - alguien va a aburrirse de vacaciones o derramar sopa - pero escalar esto hasta miles de inconsistencias y darles un valor monetario (por ejemplo, intercambios en un intercambio financiero donde hay una inconsistencia entre lo que piensas has comprado o vendido y lo que dice el registro de intercambio) y es un gran problema.
+
+Podríamos resolver la coherencia utilizando una base de datos. En el momento correcto en el proceso de pedido de libros, el número de libros en existencia de War and Peace se reduce en uno. Cuando el otro cliente llega a este punto, el armario está vacío y el proceso de pedido lo alertará de esto sin continuar con el pago. El primero funciona completamente, el segundo no funciona en absoluto.
+
+Las bases de datos son excelentes en esto porque se enfocan en las propiedades ACID y nos dan consistencia al darnos aislamiento, de modo que cuando Customer One reduce los libros en inventario en uno, y al mismo tiempo aumenta los libros en la cesta en uno, cualquier estado intermedio están aislados del Cliente Dos, que tiene que esperar unos pocos milisegundos mientras el almacén de datos se hace consistente.
+
+Disponibilidad
+
+Disponibilidad significa simplemente eso: el servicio está disponible (para operar completamente o no como se indicó anteriormente). Cuando compra el libro, desea obtener una respuesta, no un mensaje del navegador acerca de que el sitio web no sea comunicativo. Gilbert y Lynch en su prueba del Teorema de PAC destacan que la disponibilidad generalmente te abandona cuando más lo necesitas; los sitios tienden a bajar en los períodos ocupados precisamente porque están ocupados. Un servicio que está disponible pero no se accede no es beneficioso para nadie.
+
+Tolerancia de partición
+
+Si su aplicación y base de datos se ejecutan en un cuadro, (ignorando los problemas de escala y asumiendo que todo su código es perfecto) su servidor actúa como una especie de procesador atómico ya que funciona o no (es decir, si se ha bloqueado no está disponible, pero tampoco causará inconsistencia de datos).
+
+Una vez que comienzas a difundir los datos y la lógica alrededor de diferentes nodos, existe el riesgo de que se formen particiones. Una partición ocurre cuando, por ejemplo, un cable de red se corta, y el nodo A ya no puede comunicarse con el nodo B. Con el tipo de capacidades de distribución que proporciona la web, las particiones temporales son una ocurrencia relativamente común y, como dije antes, ' También no es tan raro dentro de las corporaciones globales con múltiples centros de datos.
+
+Gilbert y Lynch definieron la tolerancia de partición como:
+
+No se permite que un conjunto de fallas por debajo de la falla total de la red haga que el sistema responda incorrectamente
+
+y notó el comentario de Brewer de que una partición de un nodo es equivalente a una caída del servidor, porque si nada puede conectarse a ella, bien podría no estar allí.
+
+La importancia del teorema
+
+El teorema CAP cobra vida a medida que se escala una aplicación. En volúmenes transaccionales bajos, las latencias pequeñas para permitir que las bases de datos sean consistentes no tienen un efecto notable en el rendimiento general o en la experiencia del usuario. Cualquier distribución de carga que realice, por lo tanto, es probable que sea por razones de administración de sistemas.
+
+Pero a medida que aumenta la actividad, estos puntos de pellizco en el rendimiento comenzarán a limitar el crecimiento y crear errores. Una cosa es tener que esperar a que una página web regrese con una respuesta y otra experiencia para ingresar los detalles de su tarjeta de crédito para que se encuentre con "HTTP 500 java.lang.schrodinger.purchasingerror" y se pregunte si acaba de pagar. algo que no obtendrá, no pagará en absoluto, o tal vez el error sea irrelevante para esta transacción. ¿Quién sabe? Es poco probable que continúe, más probabilidades de comprar en otro lugar, y muy probable que telefonee a su banco.
+
+De cualquier forma, esto no es bueno para los negocios. Amazon afirma que solo una décima de segundo adicional en sus tiempos de respuesta les costará 1% en ventas. Google dijo que notaron que solo medio segundo de aumento en la latencia causó que el tráfico cayera en un quinto.
+
+He escrito un poco sobre la escalabilidad antes , por lo que no repetiré todo eso excepto para hacer dos puntos: el primero es que abordar los problemas de escala puede ser una preocupación arquitectónica, pero las discusiones iniciales no lo son. Son decisiones comerciales. Me cansé de escuchar, de los expertos en tecnología, que tal enfoque no está garantizado porque los volúmenes de actividad actuales no lo justifican. No es que estén equivocados; la mayoría de las veces son bastante correctas, es que limitar la escala desde el principio es implícitamente tomar decisiones de ingresos, un factor que debe hacerse explícito durante el análisis comercial.
+
+El segundo punto es que una vez que se embarque en discusiones sobre cómo escalar mejor su aplicación, el mundo se divide en dos campos ideológicos: la multitud de la base de datos y la multitud que no pertenece a la base de datos.
+
+La base de datos, como era de esperar, se parece a la tecnología de bases de datos y tenderá a abordar la escala hablando de cosas como el bloqueo optimista y la fragmentación , manteniendo la base de datos en el centro de todo.
+
+La multitud que no pertenece a la base de datos tenderá a abordar la escala administrando datos fuera del entorno de la base de datos (evitando el mundo relacional) durante el mayor tiempo posible.
+
+Creo que es justo decir que el primer grupo no ha adoptado el Teorema CAP con el mismo entusiasmo que el segundo (aunque están hablando de ello ). Esto se debe a que si tiene que eliminar una de consistencia, disponibilidad o tolerancia de partición, muchos optan por dejar de lado la coherencia, que es la razón de ser de la base de datos. La lógica. sin duda, es que la disponibilidad y la tolerancia a la partición mantienen viva su aplicación generadora de dinero, mientras que la incoherencia simplemente se siente como una de esas cosas con las que puede trabajar con un diseño inteligente.
+
+Como muchas otras cosas en TI, no es tan blanco y negro como este. Eric Brewer, en la diapositiva 13 de su charla de PODC, cuando compara ACID y su equivalente informal BASE, incluso dice "Creo que es un espectro". Y si está interesado en esto como un tema (está un poco fuera de lo que quiero hablar aquí) podría hacer algo peor que comenzar con un documento llamado " Diseño y Evaluación de un Modelo de Coherencia Continua para Servicios Replicados " por Haifeng Yu y Amin Vahdat. Nadie debería interpretar que CAP implica que la base de datos está muerta.
+
+Sin embargo, donde ambos lados están de acuerdo es que la respuesta a la escala es la paralelización distribuida no, como se pensaba, el gruñido de la supercomputadora. La influencia de Eric Brewer en los proyectos de la Red de Estaciones de Trabajo de mediados de los noventa llevó a las arquitecturas que expusieron el teorema CAP, porque como dice en otra presentación en Inktomi y en Internet Bubble (flash) la respuesta siempre ha sido procesadores trabajando en paralelo:
+
+Si no están trabajando en paralelo, no tienes posibilidad de resolver el problema en un tiempo razonable. Esto es muy parecido a cualquier otra cosa. Si tienes un gran trabajo que hacer, obtienes mucha gente para hacerlo. Entonces, si estás construyendo un puente, tienes muchos trabajadores de la construcción. Eso es procesamiento paralelo también. Entonces, gran parte de esto terminará siendo "¿cómo podemos mezclar procesamiento paralelo e Internet?"
+
+La prueba en imágenes
+
+Aquí hay una prueba simplificada, en imágenes porque me resulta mucho más fácil de entender de esa manera. En su mayoría he usado los mismos términos que Gilbert y Lynch para que esto se vincule con su papel.
+
+
+
+El diagrama de arriba muestra dos nodos en una red, N 1 y N 2 . Ambos comparten un dato V (cuántas copias físicas de War and Peace hay en stock), que tiene un valor V 0 . Running on N 1 es un algoritmo llamado A que podemos considerar seguro, libre de errores, predecible y confiable. Ejecutar en N 2 es un algoritmo similar llamado B. En este experimento, A escribe nuevos valores de V y B lee valores de V.
+
+
+
+En un escenario soleado, esto es lo que sucede: (1) First A escribe un nuevo valor de V, que llamaremos V 1 . (2) Luego se pasa un mensaje (M) de N 1 a N 2 que actualiza la copia de V allí. (3) Ahora, cualquier lectura de B de V devolverá V 1 .
+
+
+
+Si las particiones de la red (es decir, los mensajes de N 1 a N 2 no se entregan), entonces N 2 contiene un valor incoherente de V cuando se produce el paso (3).
+
+Espero que eso parezca bastante obvio. Escala esto es incluso hasta unos cientos de transacciones y se convierte en un problema importante. Si M es un mensaje asincrónico, N 1 no tiene forma de saber si N 2 recibe el mensaje. Incluso con la entrega garantizada de M, N 1 no tiene forma de saber si un mensaje se retrasa por un evento de partición o algo que falla en N 2 . Hacer M sincrónico no ayuda porque eso trata la escritura por A en N 1 y el evento de actualización desde N 1 a N 2como una operación atómica, que nos da los mismos problemas de latencia de los que ya hemos hablado (o algo peor). Gilbert y Lynch también prueban, utilizando una ligera variación de esto, que incluso en un modelo parcialmente sincrónico (con relojes ordenados en cada nodo) no se puede garantizar la atomicidad.
+
+Entonces, lo que CAP nos dice es que si queremos que A y B estén altamente disponibles (es decir, que trabajen con latencia mínima) y queremos que nuestros nodos N 1 a N n (donde n podrían ser cientos o incluso miles) sigan siendo tolerantes a las particiones de red (mensajes perdidos, mensajes no entregados, interrupciones de hardware, fallas de proceso), a veces vamos a obtener casos donde algunos nodos piensan que V es V 0 (una copia de War and Peace en stock) y otros nodos pensarán que V es V 1 (no hay copias de War and Peace en stock).
+
+Realmente nos gustaría que todo sea estructurado, consistente y armonioso, como la música de una banda de rock progresivo de principios de los años setenta, pero a lo que nos enfrentamos es a la anarquía al estilo punk. Y, de hecho, aunque pueda asustar a nuestras abuelas, está bien una vez que sepa esto, porque ambas pueden trabajar juntas muy felizmente.
+
+Analicemos esto rápidamente desde una perspectiva transaccional.
+
+
+
+Si tenemos una transacción (es decir, una unidad de trabajo basada en el elemento de datos persistentes V) llamada a, entonces a 1 podría ser la operación de escritura desde antes y a 2 podría ser la lectura. En un sistema local esto fácilmente podría ser manejado por una base de datos con un poco de bloqueo simple, aislando cualquier intento de leer en a 2 hasta alfa 1 se completa con seguridad. Sin embargo, en el modelo distribuido, con los nodos N 1 y N 2 de los que preocuparse, el mensaje de sincronización intermedia también debe completarse. A menos que podamos controlar cuándo ocurre a 2 , nunca podemos garantizar que verá los mismos valores de datos a 1escribe Todos los métodos para agregar control (bloqueo, aislamiento, administración centralizada, etc.) afectarán la tolerancia de partición o la disponibilidad de a 1 (A) y / o a 2 (B).
+
+Tratando con CAP
+
+Tienes algunas opciones al abordar los problemas que plantea CAP. Los más obvios son:
+
+Dejar caer la tolerancia de la partición
+
+Si quieres correr sin particiones tienes que evitar que sucedan. Una forma de hacerlo es poner todo (relacionado con esa transacción) en una máquina, o en una unidad que falla atómicamente como un rack. No está 100% garantizado porque aún puede tener fallas parciales, pero es menos probable que tenga efectos secundarios similares a las particiones. Hay, por supuesto, límites de escala significativos para esto.
+
+Drop Availability
+
+Esta es la otra cara de la moneda drop-partition-tolerance. Al encontrarse con un evento de partición, los servicios afectados simplemente esperan hasta que los datos sean consistentes y, por lo tanto, no estén disponibles durante ese tiempo. Controlar esto podría ser bastante complejo en muchos nodos, con nodos re-disponibles que necesitan lógica para manejar de nuevo correctamente en línea.
+
+Caída de consistencia
+
+O, como dice Werner Vogels, acepte que las cosas se convertirán en " Eventualmente consistentes " (actualizado en diciembre de 2008). El artículo de Vogels vale la pena leerlo. Él entra en muchos más detalles sobre detalles operativos que yo aquí.
+
+Muchas inconsistencias en realidad no requieren tanto trabajo como usted pensaría (lo que significa que la consistencia continua probablemente no sea algo que necesitemos de todos modos). En mi ejemplo de pedido de libros, si se reciben dos pedidos para el único libro que está en stock, el segundo se convierte en un pedido pendiente. Siempre y cuando se le informe al cliente (y recuerde que este es un caso raro) probablemente todo el mundo esté contento.
+
+El salto BASE
+
+La noción de aceptar consistencia eventual se apoya a través de un enfoque arquitectónico conocido como base ( B asically A vailable, S oft-estado, E ventually consistente). BASE, como su nombre indica, es el opuesto lógico de ACID, aunque sería completamente incorrecto implicar que cualquier arquitectura debería (o podría) basarse totalmente en una u otra. Este es un punto importante para recordar, dado el hábito de nuestra industria de adoptar una estrategia "oooh brillante".
+
+Y aquí me remito al Profesor Brewer mismo que me envió algunos comentarios sobre este artículo, diciendo:
+
+el término "BASE" se presentó por primera vez en el artículo de SOSP de 1997 que usted cita. Se me ocurrió el acrónimo con mis alumnos en su oficina a principios de ese año. Estoy de acuerdo en que fue ideado un poco, pero también lo es "ACID", mucho más de lo que las personas se dan cuenta, así que pensamos que era lo suficientemente bueno. Jim Gray y yo discutimos sobre estos acrónimos y admitió que ACID también era demasiado extenso: el A y el D se superponen mucho y el C está mal definido en el mejor de los casos. Pero el par connota la idea de un espectro, que es uno de los puntos de la conferencia del PODC como usted señala correctamente.
+
+Dan Pritchett de EBay tiene una bonita presentación en BASE.
+
+Diseñar a su alrededor
+
+Guy Pardon, CTO de atomikos, escribió una publicación interesante a la que llamó " A CAP Solution (Proving Brewer Wrong) ", sugiriendo un enfoque arquitectónico que ofrecería consistencia, disponibilidad y tolerancia de partición, aunque con algunas advertencias (especialmente que no obtener los tres garantizados en el mismo instante).
+
+Vale la pena leerlo ya que Guy representa elocuentemente una opinión contraria en esta área.
+
+Resumen
+
+Que solo puede garantizar dos de Coherencia, Disponibilidad y Tolerancia de partición es real y evidenciado por los sitios web más exitosos del planeta. Si funciona para ellos, no veo ninguna razón por la cual las mismas concesiones no se deben considerar en el diseño cotidiano en entornos corporativos. Si el negocio explícitamente no quiere escalar, entonces hay soluciones más simples disponibles, pero es una conversación que vale la pena tener. En cualquier caso, estas discusiones versarán sobre diseños apropiados para operaciones específicas, no sobre todo el conjunto. Como dijo Brewer en su correo electrónico, "la única otra cosa que agregaría es que diferentes partes del mismo servicio pueden elegir diferentes puntos en el espectro". A veces es absolutamente necesario tener consistencia sea ??cual sea el costo de escala, porque el riesgo de no tenerlo es demasiado grande.
+
+Estos días llegaría a decir que Amazon y EBay no tienen un problema de escalabilidad. Creo que tenían uno y ahora tienen las herramientas para abordarlo. Es por eso que pueden hablar libremente sobre eso. Cualquier escalado que hagan ahora (dado el tamaño que ya tienen) es realmente más de lo mismo. Una vez que haya escalado, sus problemas se trasladarán a los de mantenimiento operacional, monitoreo, implementación de actualizaciones de software, etc., difíciles de resolver, sin duda, pero agradables de tener cuando lleguen esos flujos de ingresos.
+
+Referencias
+
+HP asume el CAP Theorem, un libro blanco titulado " No hay almuerzo gratis con datos distribuidos "
+
+Notas de informática sobre transacciones distribuidas y particiones de red de la Universidad de Sussex
+
+Buena publicación de Jens Alfke en bases de datos, escalas y Twitter.
+
+El documento de Microsoft sobre transacciones distribuidas y SOA de Pat Helland llamó Data on the Outside versus Data on the Inside , que luego relacionó con CAP Theorem aquí.
+
+Otro conjunto de diapositivas del curso de Informática , esta vez de la Universidad George Mason de Virginia, sobre Sistemas de Software Distribuidos y particularmente el Teorema de CAP y el choque entre las ideologías de ACID y BASE.
+
+El 4 de junio de 1976 se considera el nacimiento de Punk Rock en el Reino Unido. Gracias a Charlie Dellacona por señalar que los Ramones se atribuyen el mérito de haber iniciado el movimiento a principios de 1974 en los Estados Unidos, aunque sus grabaciones punk oficiales son más o menos contemporáneas.
+
+Gracias a Hiroshi Yuki , está disponible una traducción al japonés de este artículo.
+
+Gracias a Daniel Cohen , hay disponible una traducción hebrea en dos partes de este artículo.
+
+Gracias a Wang Qi , está disponible una traducción al chino de este artículo.
+
+La obra de arte es obra del talentoso Johannes Saurer . Puedes encontrar el original aquí y ver su otro trabajo aquí .
+
+
+https://blogs.msdn.microsoft.com/pathelland/2007/05/20/soa-and-newtons-universe/
+
+SOA y el universo de Newton
+
+
+Bill de HOra  y mi viejo amigo (de nuestros días en Amazon)  Mike Dierken   comentó   sobre mi uso de SOA versus "sistemas distribuidos". También hubo un interés en mi perspectiva sobre la conjetura de la PAC . Déjame vomitar algunos pensamientos ...
+
+Puede ser un poco inusual, pero mi forma de pensar en "sistemas distribuidos" fue el esfuerzo de más de 30 años (y aún en curso) para hacer que muchos sistemas parezcan uno. Las transacciones distribuidas, algoritmos de quórum, RPC, solicitud-respuesta síncrona, esquema estrechamente acoplado y esfuerzos similares intentan enmascarar la existencia de independencia del desarrollador de la aplicación y del usuario. En otras palabras, hágale ver a la aplicación como muchos sistemas son un solo sistema. Si bien he invertido una parte importante de mi carrera trabajando en este esfuerzo, me he arrepentido y creo que estamos evolucionando lejos de este enfoque.
+
+Escribí un documento para CIDR 2005  titulado "Datos en el exterior versus datos en el interior". En ese documento, exploro la diferencia en la semántica de los datos cuando está desbloqueado. Dentro de una base de datos, el significado de los datos se puede interpretar con una clara y nítida sensación de "ahora" proporcionada por la transacción actual. No se mueve nada cuando está en una transacción a menos que la aplicación que se está ejecutando actualmente que inició la transacción cambie los datos. Hay una fuerte sensación de quietud y de ahora. Los datos internos son mucho de lo que históricamente hemos programado.
+
+En "computación distribuida" (en mi uso inusual ... no en la lengua vernácula comúnmente aceptada), estamos tratando de extender esta noción a través de múltiples máquinas.
+
+En SOA (una vez más, cómo lo pienso), estamos reconociendo la existencia de máquinas independientes. Esto afecta el alcance transaccional (terminamos con diferentes fragmentos de datos que no pueden ser actualizados por la misma transacción) y terminamos con esquemas y operaciones que evolucionan independientemente para los diferentes sistemas. Este es un concepto seminalmente diferente de los sistemas distribuidos (al menos en la forma en que pienso en ellos).
+
+Si intentas imponer un orden global a las transacciones a través de MUCHOS sistemas, es muy parecido a la forma en que Newton pensó en el Universo con el tiempo marchando hacia adelante uniformemente en todas partes. Es por eso que digo que los "sistemas distribuidos" son como el Universo de Newton.
+
+Ahora, consideremos SOA con alcances independientes de serializabilidad (es decir, la colección de computadoras tiene diferentes grupos de datos que son independientes en sus transacciones ... no se puede hacer una transacción a través de estos diferentes fragmentos de datos). Estos se dividen en sistemas independientes (generalmente aplicaciones independientes) que encapsulan sus propios datos y se comunican a través de mensajes. Cuando System-A envía un mensaje al Sistema-B, los datos contenidos en el mensaje se desbloquearán antes de enviarlo. Eso significa que los datos son un artefacto histórico. System-B solo puede ver lo que algunos de los datos del Sistema-A solían parecerse. Este es un aspecto esencial de estos sistemas independientes que no comparten transacciones. Debido a esto, pienso en cada sistema que vive en su dominio temporal. Conoce su estado interno y conoce un subconjunto del estado anterior de su compañero. Esto es como mirar al cielo nocturno y ver la luz de las estrellas vecinas emitidas años antes. Cada uno de estos sistemas vive en su propio tiempo y tiene una visión independiente del tiempo. Para mí, esto es como el Universo de Einstein, donde el tiempo avanza según la perspectiva del espectador .
+
+Entonces, el paso de los sistemas distribuidos (un alcance transaccional -> una noción de tiempo) a SOA (ámbitos transaccionales independientes -> tiempo basado en la perspectiva del usuario) es como pasar del Universo de Newton al Universo de Einstein.
+
+-----> Ahora, vamos a despotricar por un momento sobre la conjetura CAP ...
+
+Primero, resumamos lo que dijo Eric Brewer en 2000 en una conferencia magistral invitada en los Principios de Informática Distribuida. Si bien no estoy muy familiarizado con toda la literatura sobre esto, creo que lo entiendo lo suficientemente bien como para expresarlo. Eric dijo que si consideraba CAP - Coherencia, disponibilidad y tolerancia de partición, ofreció una conjetura de que es imposible lograr los tres. Creo totalmente en esta conjetura, pero quiero ofrecer algunos giros sobre cómo pensar sobre ello.
+
+Primero, me di cuenta hace mucho tiempo de que existe un conflicto intrínseco entre la coherencia y la disponibilidad frente a las particiones. Esto me ha llevado a estar cada vez más disgustado con las transacciones distribuidas (ver "La vida más allá de las transacciones distribuidas: la opinión de un apóstata") El protocolo de confirmación en dos fases (en el que he trabajado durante gran parte de mi carrera profesional) garantizará la coherencia perfecta en un tiempo infinito. Lo digo porque esperará y esperará hasta que se resuelva la transacción y luego ofrecerá una coherencia perfecta. Por supuesto, mientras está particionado y esperando, las franjas arbitrarias de la base de datos de la aplicación pueden bloquearse, haciendo que la aplicación quede inutilizable. Por esta razón, con frecuencia me he referido al protocolo de confirmación de dos fases como el "Protocolo de Anti-Disponibilidad". Cada vez es más claro para mí que este protocolo se usa mejor con moderación.
+
+Lo que creo que es interesante es cómo las aplicaciones del mundo real modifican la definición de consistencia y disponibilidad para proporcionar tolerancia a la partición. Tenga en cuenta que mis observaciones sobre esto no invalidan la conjetura de CAP (que creo que es correcta) sino que muestran cómo el dolor se reduce drásticamente al perder algunos supuestos ancestrales sobre los sistemas distribuidos.
+
+Los enfoques clásicos de base de datos / transacción para la consistencia eligen enfatizar la semántica de lectura-escritura. Para preservar la Lectura-Escritura-Consistencia, usted bloquea los datos. Hemos estado en esto por más de 30 años. Lo que veo que sucede en los sistemas de acoplamiento flexible es idéntico al de las empresas que operaron hace 150 o 200 años cuando se enviaban mensajes con los correos que corrían por la ciudad entre las empresas. Usted asignó (es decir, reservó) la capacidad de realizar una operación y luego tomó el paso de confirmación para garantizar la finalización del trabajo. Hoy, haces una reserva en un hotel y luego te presentas para completar la operación. ¿Cuál es la definición de consistencia en este mundo? Es el recuerdo exitoso de la reserva y luego mantener una habitación para usted. El recuento de habitaciones reservadas no está bloqueadoesperando que usted decida si desea la reserva, esperando que la cancele, o mientras espera para ver si se presenta. La definición de consistencia evoluciona a una que explícitamente incluye la independencia y el desacoplamiento.
+
+Un documento muy bueno sobre este concepto es: Soporte de aislamiento para aplicaciones basadas en servicios . En este documento, Paul Greenfield y otros argumentan que los predicados son la mejor expresión del aislamiento requerido al realizar trabajos de larga duración que abarcan sistemas de acoplamiento débil (SOA). Por ejemplo, mi trabajo puede asignar $ 200 de su cuenta bancaria porque se supone que es mío si el trabajo cooperativo que estamos haciendo se compromete. El saldo de su cuenta bancaria no se bloquea, solo $ 200 están gravados a la espera del resultado de nuestro trabajo cooperativo.
+
+Esto dobla la definición de consistencia y disponibilidad. Por lo general, se considera que proporcionan semántica de lectura y escritura, por lo que se implementan con bloqueo. Si proporciona semántica de operación, esto simplemente cambia la forma de bloqueo y cambia la forma de consistencia y aislamiento. La primera vez que vi esto fue de Pat O'Neil en The Escrow Transaction Method publicado en 1986. En este documento, Pat observa que el uso de operaciones y el registro de operaciones pueden aumentar la concurrencia. En Tandem, lo hicimos a fines de la década de 1980 para permitir que la suma y la resta tuvieran un comportamiento especial para mejorar nuestros números de referencia TPC-B. Lo que hicimos fue detectar cuando una operación SQL era una suma o una resta a un campo de un registro. Registraríamos un "+30" o "-50" como la operación en el registro de la transacción. También mantendríamos el peor caso, el límite inferior y el peor caso, el límite superior para el valor del campo en función de su valor comprometido combinado con las transacciones pendientes (aún no comprometidas ni canceladas). Nos las arreglaremos para que el campo permanezca dentro de los límites aceptados. Si realizó un "+30" y luego abortó la transacción, el acto de abortar la operación restaría 30. De esta forma, todas las transacciones realizarían correctamente sus operaciones, pero podríamos ejecutar MUCHAS transacciones al mismo tiempo contra un valor muy alto. Por supuesto, un intento de leer el valor cerraría todo, esperaría a que las transacciones pendientes se establecieran, mostraría el resultado subyacente y luego dejaría que se reanudara el caos. Esta fue una técnica muy exitosa para hacer frente a la alta concurrenciaoperaciones conmutativas (en este caso, suma y resta) contra un valor de punto caliente.
+
+Hoy en día, vemos esta misma técnica aplicada en una granularidad diferente. Si se aleja de pensar en bloquear datos a distancia y avanzar para garantizar la capacidad de realizar una operación reservada, piense de manera diferente. Es por eso que puede reservar una habitación para no fumadores de tamaño king pero no (típicamente) la habitación de reserva 301. Lo que se promete es un miembro de una categoría fungible de habitaciones. Es una promesa diferente de consistencia.
+
+Mi publicación reciente "Recuerdos, conjeturas y disculpas" se  juega con lo que veo que sucede de manera creciente. Cada vez más, veo que las empresas están dispuestas a aflojar la consistencia incluso más de lo que describía anteriormente. Están dispuestos a dar ocasionalmente la respuesta incorrecta porque es más rentable.
+
+En presencia de una disponibilidad imperfecta de conocimiento, una empresa se ve obligada a elegir entre el cierre del servicio (reduciendo la disponibilidad del servicio), el exceso de reservas o el aprovisionamiento excesivo. De hecho, si los sistemas múltiples (o humanos) están extendiendo los compromisos de forma independiente, deben elegir entre exceso de reserva, sobreaprovisionamiento o algún equilibrio desconocido entre ellos. Si tengo 10,000 widgets para vender y 100 vendedores, podría asignar 100 a cada vendedor y saberque no he reservado en exceso si salen y venden los widgets de forma independiente. Sin embargo, para hacer esto, estoy casi seguro de que necesito un inventario adicional para los vendedores, personas que no venden todos los 100 de sus widgets. De hecho, para la mayoría de las empresas, esta es una propuesta ridículamente costosa. Por lo tanto, se realiza un análisis de las estadísticas, se calcula el costo de la reserva excesiva y las asignaciones se basan en las expectativas de venta de los 100.000 widgets. El algoritmo débilmente acoplado explícitamente permite una probabilidad de exceso de reserva en función de su costo-beneficio. Esta es una relajación de la definición de consistencia para hacer frente a las realidades de la conjetura de la PAC.
+
+Es esencial abordar la informática como un medio para apoyar a las empresas, no como un fervor religioso. No creo que sea "incorrecto" relajar la coherencia, creo que es importante entender las concesiones comerciales y aplicar las realidades tecnológicas para apoyar al negocio de manera efectiva.
+
+
