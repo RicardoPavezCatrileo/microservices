@@ -1,0 +1,53 @@
+Patrón:arquitectura monolítica (http://microservices.io/patterns/monolithic.html)
+Contexto
+Está desarrollando una aplicación empresarial del lado del servidor. Debe admitir una variedad de clientes diferentes, incluidos navegadores de escritorio, navegadores móviles y aplicaciones móviles nativas. La aplicación también puede exponer una API para que consuman terceros. También podría integrarse con otras aplicaciones a través de servicios web o un intermediario de mensajes. La aplicación maneja las solicitudes (solicitudes y mensajes HTTP) mediante la ejecución de la lógica comercial; acceder a una base de datos; intercambiar mensajes con otros sistemas; y devolver una respuesta HTML / JSON / XML. Hay componentes lógicos que corresponden a diferentes áreas funcionales de la aplicación.
+
+Problema
+¿Cuál es la arquitectura de implementación de la aplicación?
+
+Efectivo
+Hay un equipo de desarrolladores trabajando en la aplicación
+Los nuevos miembros del equipo deben volverse productivos rápidamente
+La aplicación debe ser fácil de entender y modificar
+Desea practicar el despliegue continuo de la aplicación
+Debe ejecutar múltiples copias de la aplicación en varias máquinas para satisfacer los requisitos de escalabilidad y disponibilidad
+Desea aprovechar las tecnologías emergentes (marcos, lenguajes de programación, etc.)
+Solución
+Cree una aplicación con una arquitectura monolítica. Por ejemplo:
+
+un solo archivo WAR de Java.
+una sola jerarquía de directorios de código Rails o NodeJS
+Ejemplo
+Imaginemos que está creando una aplicación de comercio electrónico que recibe pedidos de los clientes, verifica el inventario y el crédito disponible, y los envía. La aplicación consta de varios componentes, incluido StoreFrontUI, que implementa la interfaz de usuario, junto con algunos servicios de back-end para verificar el crédito, mantener el inventario y las órdenes de envío.
+
+La aplicación se implementa como una única aplicación monolítica. Por ejemplo, una aplicación web Java consiste en un único archivo WAR que se ejecuta en un contenedor web como Tomcat. Una aplicación Rails consiste en una única jerarquía de directorios desplegada utilizando, por ejemplo, Phusion Passenger en Apache / Nginx o JRuby en Tomcat. Puede ejecutar varias instancias de la aplicación detrás de un equilibrador de carga para escalar y mejorar la disponibilidad.
+
+
+
+Contexto resultante
+Esta solución tiene una serie de beneficios:
+
+Simple de desarrollar: el objetivo de las herramientas de desarrollo actuales y los IDE es apoyar el desarrollo de aplicaciones monolíticas
+Simple de implementar: simplemente necesita desplegar el archivo WAR (o la jerarquía de directorios) en el tiempo de ejecución apropiado
+Simple de escalar: puede escalar la aplicación ejecutando varias copias de la aplicación detrás de un equilibrador de carga
+Sin embargo, una vez que la aplicación se vuelve grande y el equipo crece en tamaño, este enfoque tiene una serie de inconvenientes que se vuelven cada vez más importantes:
+
+La gran base de código monolítico intimida a los desarrolladores, especialmente a los que son nuevos en el equipo. La aplicación puede ser difícil de entender y modificar. Como resultado, el desarrollo generalmente se ralentiza. Además, debido a que no existen límites de módulos rígidos, la modularidad se rompe con el tiempo. Además, debido a que puede ser difícil entender cómo implementar correctamente un cambio, la calidad del código disminuye con el tiempo. Es una espiral descendente.
+
+IDE sobrecargado: cuanto mayor es la base de código, más lento es el IDE y los desarrolladores menos productivos.
+
+Contenedor web sobrecargado: cuanto más grande es la aplicación, más tiempo se tarda en iniciarse. Esto tuvo un gran impacto en la productividad del desarrollador debido al tiempo perdido esperando que el contenedor se inicie. También afecta el despliegue también.
+
+El despliegue continuo es difícil: una aplicación monolítica grande también es un obstáculo para las implementaciones frecuentes. Para actualizar un componente, debe volver a implementar la aplicación completa. Esto interrumpirá las tareas en segundo plano (por ejemplo, trabajos de cuarzo en una aplicación Java), independientemente de si se ven afectados por el cambio y posiblemente causen problemas. También existe la posibilidad de que los componentes que no se hayan actualizado no se inicien correctamente. Como resultado, el riesgo asociado con el redespliegue aumenta, lo que desalienta las actualizaciones frecuentes. Esto es especialmente un problema para los desarrolladores de la interfaz de usuario, ya que generalmente necesitan iterar rápidamente y volver a implementar con frecuencia.
+
+Escalar la aplicación puede ser difícil: una arquitectura monolítica es que solo puede escalar en una dimensión. Por un lado, puede escalar con un volumen de transacción creciente ejecutando más copias de la aplicación. Algunas nubes incluso pueden ajustar el número de instancias de forma dinámica en función de la carga. Pero, por otro lado, esta arquitectura no puede escalar con un volumen de datos en aumento. Cada copia de la instancia de la aplicación tendrá acceso a todos los datos, lo que hace que el almacenamiento en caché sea menos efectivo y aumenta el consumo de memoria y el tráfico de E / S. Además, los diferentes componentes de la aplicación tienen diferentes requisitos de recursos, uno puede ser intensivo de la CPU, mientras que otro puede requerir mucha memoria. Con una arquitectura monolítica, no podemos escalar cada componente de forma independiente
+
+Obstáculo al desarrollo de escalamiento: una aplicación monolítica también es un obstáculo para el desarrollo de escalado. Una vez que la aplicación alcanza cierto tamaño, es útil dividir la organización de ingeniería en equipos que se centren en áreas funcionales específicas. Por ejemplo, es posible que deseemos tener el equipo de IU, el equipo de contabilidad, el equipo de inventario, etc. El problema con una aplicación monolítica es que impide que los equipos trabajen de forma independiente. Los equipos deben coordinar sus esfuerzos de desarrollo y redistribuciones. Es mucho más difícil para un equipo realizar un cambio y actualizar la producción.
+
+Requiere un compromiso a largo plazo con una pila tecnológica: una arquitectura monolítica lo obliga a estar casado con la pila de tecnología (y en algunos casos, a una versión particular de esa tecnología) que eligió al inicio del desarrollo. Con una aplicación monolítica, puede ser difícil adoptar incrementalmente una tecnología más nueva. Por ejemplo, imaginemos que eligió la JVM. Tiene algunas opciones de idioma ya que, además de Java, puede utilizar otros lenguajes JVM que funcionan bien con Java, como Groovy y Scala. Pero los componentes escritos en lenguajes que no son de JVM no tienen cabida dentro de su arquitectura monolítica. Además, si su aplicación utiliza un marco de plataforma que posteriormente queda obsoleto, puede ser un desafío migrar incrementalmente la aplicación a un marco más nuevo y mejor.
+
+Patrones relacionados
+La arquitectura de microservicio es un patrón alternativo que aborda las limitaciones de la arquitectura monolítica.
+
+Usos conocidos
+Conocidos servicios de internet como Netflix, Amazon.com y eBay inicialmente tenían una arquitectura monolítica. La mayoría de las aplicaciones web desarrolladas por el autor tenían una arquitectura monolítica.
