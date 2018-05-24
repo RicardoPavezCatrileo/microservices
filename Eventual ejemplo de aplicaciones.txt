@@ -1,0 +1,27 @@
+Eventual ejemplo de aplicaciones
+La plataforma Eventuate ™ para desarrollar microservicios transaccionales . Proporciona modelos de programación impulsados ??por eventos simples pero potentes que resuelven los problemas de gestión de datos distribuidos inherentes a una arquitectura de microservicio.
+
+La plataforma admite dos modelos de programación diferentes:
+
+Eventuate Tram para microservicios que usan la persistencia tradicional basada en JDBC / JPA.
+Eventuate para microservicios que usan Event Sourcing .
+Eventuate Tram Spring Boot / JPA ejemplos nuevos
+Los frameworks Eventuate Tram y Eventuate Tram Sagas le permiten desarrollar microservicios basados ??en eventos que utilizan la persistencia tradicional basada en JDBC / JPA.
+
+Eventuate Tram Todo : una sencilla aplicación de lista Todo que utiliza Spring Boot, JPA, eventos de dominio y CQRS.
+Eventuate Tram Customers and Orders : demuestra cómo mantener la consistencia de los datos en Spring Boot, una arquitectura de microservicio basada en JPA que utiliza sagas basadas en la coreografía .
+Clientes y pedidos de Event Sagas de Tram : demuestra cómo mantener la consistencia de los datos en una arquitectura de microservicio basada en JPA basada en JPA, que utiliza sagas basadas en orquestación .
+Aplicación FTGO : la aplicación de ejemplo para mi libro de patrones de Microservicios
+Ejemplos de Event Event Eventing
+Eventuate le permite escribir fácilmente microservicios que usan Event Sourcing y Command Query Responsibility Segregation (CQRS) . Eventuate consiste en un servidor de tienda de eventos distribuido y escalable y bibliotecas cliente para varios lenguajes y marcos, incluidos Java, Scala y el marco Spring. Hay varias aplicaciones de ejemplo en github.com que ilustran cómo usar la plataforma Eventuate.
+
+Eventuate está disponible como un servicio (SaaS) hospedado en Amazon Web Services o como un proyecto de código abierto que se puede ejecutar localmente.
+
+Aplicación Lista de Todo: la aplicación hello world para Eventuate ™ Platform. Ilustra cómo puede usar la plataforma para escribir una aplicación que utiliza Event Sourcing y Command Query Responsibility Segregation (CQRS). La aplicación Lista de tareas permite a los usuarios mantener una lista de tareas pendientes.
+Versión de Java del ejemplo de pedidos y clientes : una aplicación que he utilizado en mis charlas (por ejemplo, Gluecon 2016 ) para ilustrar cómo lograr la coherencia final mediante el uso de fuentes de eventos.
+AWS Lambda Java Echo : ilustra cómo puede escribir una función AWS Lambda que consume eventos Eventuate. Se implementa utilizando Serverless y se suscribe a los eventos publicados por la aplicación Lista de tareas descrita anteriormente.
+Lista AWS Lambda Todo : la versión AWS Lambda de la aplicación Lista de tareas descrita anteriormente. Consiste en un conjunto de lambdas que se implementan usando Serverless .
+Administración de restaurantes : Food to Go es una compañía ficticia de logística a pedido del libro POJOs in Action de Chris Richardson. Entrega pedidos para llevar de restaurantes a clientes. Una parte clave de la aplicación es el servicio de gestión de restaurantes, que mantiene una base de datos de restaurantes a los que se puede consultar la disponibilidad para entregar un pedido a un cliente en un momento determinado. Esta versión del servicio de gestión de restaurantes tiene una arquitectura basada en microservicios, aprovisionamiento de eventos y Segregación de Responsabilidad de Consulta de Comando (CQRS). Está escrito en Java y usa la plataforma Eventuate, Spring Boot y Redis.
+Transferencia de dinero : muestra cómo transferir dinero entre dos cuentas bancarias usando una transacción eventual y consistente. Hay versiones de Java y Scala del código. La aplicación tiene una arquitectura de microservicios y está escrita con Spring Boot.
+Kanban Board : un ejemplo de una aplicación de colaboración multiusuario en tiempo real. La aplicación Kanban Board permite a los usuarios crear y editar de forma colaborativa tablas y tareas de Kanban. Los cambios realizados por un usuario a una placa o una tarea son inmediatamente visibles para otros usuarios que visualizan la misma placa o tarea. Tiene una arquitectura de microservicios y está escrito usando Java y Spring Boot y usa MongoDB para vistas materializadas. La aplicación utiliza STOMP-over-WebSockets para enviar eventos desde el almacén de eventos a un front-end de AngularJS.
+Clientes y pedidos de Scala : el código de ejemplo de mi presentación de Scala By the Bay 2015 , que describe un diseño basado en clases de tipo Scala para Agregados que usan Event Sourcing.
