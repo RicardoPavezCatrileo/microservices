@@ -1,0 +1,67 @@
+Patrón: Saga
+(http://microservices.io/patterns/data/saga.html)
+Contexto
+Ha aplicado la base de datos por patrón de servicio . Cada servicio tiene su propia base de datos. Algunas transacciones comerciales, sin embargo, abarcan múltiples servicios, por lo que necesita un mecanismo para garantizar la coherencia de los datos en todos los servicios. Por ejemplo, imaginemos que está construyendo una tienda de comercio electrónico donde los clientes tienen un límite de crédito. La aplicación debe garantizar que un nuevo pedido no exceda el límite de crédito del cliente. Como los pedidos y los clientes se encuentran en diferentes bases de datos, la aplicación no puede usar simplemente una transacción ACID local.
+
+Problema
+¿Cómo mantener la consistencia de los datos entre los servicios?
+
+Efectivo
+2PC no es una opción
+Solución
+Implemente cada transacción comercial que abarque múltiples servicios como una saga. Una saga es una secuencia de transacciones locales. Cada transacción local actualiza la base de datos y publica un mensaje o evento para activar la próxima transacción local en la saga. Si una transacción local falla porque infringe una regla comercial, la saga ejecuta una serie de transacciones de compensación que deshacen los cambios que se realizaron en las transacciones locales anteriores.
+
+Hay dos formas de sagas de coordinación:
+
+Coreografía: cada transacción local publica eventos de dominio que desencadenan transacciones locales en otros servicios
+Orquestación: un orquestador (objeto) les dice a los participantes qué transacciones locales ejecutar
+Ejemplo: saga basada en la coreografía
+
+Una aplicación de comercio electrónico que utiliza este enfoque crearía un orden usando una saga basada en la coreografía que consta de los siguientes pasos:
+
+El Order Servicecrea una Orden en una pendiente de Estado y publica un OrderCreatedevento
+El Customer Servicereceptor recibe el evento intenta reservar crédito para esa Orden. Publica un Credit Reservedevento o un CreditLimitExceededevento.
+El Order Servicerecibe el evento y cambia el estado del pedido a aprobado o cancelado
+Ejemplo: saga basada en la orquestación
+
+
+Una aplicación de comercio electrónico que utiliza este enfoque crearía un orden usando una saga basada en orquestación que consta de los siguientes pasos:
+
+El Order Servicecrea una Orden en una pendiente de estado y crea unaCreateOrderSaga
+El CreateOrderSagaenvía un ReserveCreditcomando alCustomer Service
+Los Customer Serviceintentos de reservar crédito para esa orden y devolver una respuesta
+El CreateOrderSagarecibe la respuesta y envía un comando ApproveOrdero RejectOrderalOrder Service
+Los Order Servicecambios en el estado de la orden ya sea aprobado o cancelado
+Contexto resultante
+Este patrón tiene los siguientes beneficios:
+
+Permite a una aplicación mantener la coherencia de los datos en múltiples servicios sin usar transacciones distribuidas
+Esta solución tiene los siguientes inconvenientes:
+
+El modelo de programación es más complejo. Por ejemplo, un desarrollador debe diseñar transacciones de compensación que deshagan explícitamente los cambios realizados anteriormente en una saga.
+También están los siguientes problemas a tratar:
+
+
+Para ser confiable, un servicio debe actualizar atómicamente su base de datos y publicar un evento. No puede usar el mecanismo tradicional de una transacción distribuida que abarca la base de datos y el intermediario de mensajes. En su lugar, debe usar uno de los patrones enumerados a continuación.
+Patrones relacionados
+El patrón de Base de datos por servicio crea la necesidad de este patrón
+Los siguientes patrones son formas de actualizar atómicamente estados y publicar eventos:
+Aprovisionamiento de eventos
+Eventos de aplicación
+Activadores de base de datos
+Trailing log tail
+Ver también
+Mi libro Los patrones de Microservicios describen este patrón con mucho más detalle. La aplicación de ejemplo del libro implementa sagas utilizando el marco Eventuate Tram Sagas
+Mi presentación de MicroXchg 2018 (diapositivas y video) en sagas nuevas
+Los siguientes ejemplos implementan el ejemplo de clientes y pedidos de diferentes maneras:
+Una saga basada en la coreografía donde los servicios publican eventos de dominio utilizando el marco Eventuate Tram
+Saga basada en la Order Serviceorquestación donde se usa un orquestador de sagas implementado utilizando el marco Eventuate Tram Sagas
+Coreografía y saga basada en el abastecimiento de eventos donde los servicios publican eventos de dominio utilizando el marco de abastecimiento de eventos Eventuate
+Mi artículo de dos partes de InfoQ Developing Transactional Microservices Using Aggregates, Event Sourcing y CQRS describe cómo implementar sagas basadas en la coreografía mediante el uso de fuentes de eventos.
+
+
+
+
+
+
+
