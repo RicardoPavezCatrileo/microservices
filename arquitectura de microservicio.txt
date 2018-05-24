@@ -1,0 +1,122 @@
+Patrón: arquitectura de microservicio
+(http://microservices.io/patterns/microservices.html)
+Contexto
+Está desarrollando una aplicación empresarial del lado del servidor. Debe admitir una variedad de clientes diferentes, incluidos navegadores de escritorio, navegadores móviles y aplicaciones móviles nativas. La aplicación también puede exponer una API para que consuman terceros. También podría integrarse con otras aplicaciones a través de servicios web o un intermediario de mensajes. La aplicación maneja las solicitudes (solicitudes y mensajes HTTP) mediante la ejecución de la lógica comercial; acceder a una base de datos; intercambiar mensajes con otros sistemas; y devolver una respuesta HTML / JSON / XML. Hay componentes lógicos que corresponden a diferentes áreas funcionales de la aplicación.
+
+Problema
+¿Cuál es la arquitectura de implementación de la aplicación?
+
+Efectivo
+Hay un equipo de desarrolladores trabajando en la aplicación
+Los nuevos miembros del equipo deben volverse productivos rápidamente
+La aplicación debe ser fácil de entender y modificar
+Desea practicar el despliegue continuo de la aplicación
+Debe ejecutar múltiples copias de la aplicación en varias máquinas para satisfacer los requisitos de escalabilidad y disponibilidad
+Desea aprovechar las tecnologías emergentes (marcos, lenguajes de programación, etc.)
+Solución
+Defina una arquitectura que estructura la aplicación como un conjunto de servicios colaborativos débilmente acoplados. Este enfoque corresponde al eje Y del cubo de escala . Cada servicio implementa un conjunto de funciones estrechamente relacionadas. Por ejemplo, una aplicación puede consistir en servicios tales como el servicio de gestión de pedidos, el servicio de gestión de clientes, etc.
+
+Los servicios se comunican mediante protocolos síncronos como HTTP / REST o protocolos asíncronos como AMQP. Los servicios se pueden desarrollar y desplegar independientemente uno del otro. Cada servicio tiene su propia base de datos para desacoplarse de otros servicios. La coherencia de los datos entre los servicios se mantiene utilizando el patrón de Saga
+
+Ejemplos
+Aplicación de comercio electrónico ficticio
+Imaginemos que está creando una aplicación de comercio electrónico que recibe pedidos de los clientes, verifica el inventario y el crédito disponible, y los envía. La aplicación consta de varios componentes, incluido StoreFrontUI, que implementa la interfaz de usuario, junto con algunos servicios de back-end para verificar el crédito, mantener el inventario y las órdenes de envío. La aplicación consiste en un conjunto de servicios.
+
+
+
+Muéstrame el código
+Por favor vea las aplicaciones de ejemplo desarrolladas por Chris Richardson . Estos ejemplos en github.com ilustran varios aspectos de la arquitectura de microservicio.github . com ilustra varios aspectos de la arquitectura de microservicio.
+
+Contexto resultante
+Beneficios
+Esta solución tiene una serie de beneficios:
+
+Permite la entrega continua y el despliegue de aplicaciones grandes y complejas.
+Mejor comprobabilidad: los servicios son más pequeños y más rápidos para probar
+Mejor implementación: los servicios se pueden implementar de forma independiente
+Le permite organizar el esfuerzo de desarrollo en torno a múltiples equipos automáticos. Le permite organizar el esfuerzo de desarrollo en múltiples equipos. Cada equipo (dos pizzas) es propietario y es responsable de uno o más servicios individuales. Cada equipo puede desarrollar, implementar y escalar sus servicios independientemente de todos los otros equipos.
+Cada microservicio es relativamente pequeño
+Más fácil para un desarrollador para entender
+El IDE es más rápido y hace que los desarrolladores sean más productivos
+La aplicación comienza más rápido, lo que hace que los desarrolladores sean más productivos y acelera las implementaciones
+Aislamiento de fallas mejorado. Por ejemplo, si hay una pérdida de memoria en un servicio, solo ese servicio se verá afectado. Los otros servicios continuarán atendiendo las solicitudes. En comparación, un componente que se comporta mal en una arquitectura monolítica puede derribar todo el sistema.
+Elimina cualquier compromiso a largo plazo con una pila de tecnología. Al desarrollar un nuevo servicio, puede elegir una nueva pila de tecnología. De manera similar, al realizar cambios importantes en un servicio existente, puede reescribirlo usando una nueva pila de tecnología.
+Inconvenientes
+Esta solución tiene una serie de inconvenientes:
+
+Los desarrolladores deben lidiar con la complejidad adicional de crear un sistema distribuido.
+Las herramientas de desarrollo / IDE están orientadas a la creación de aplicaciones monolíticas y no proporcionan soporte explícito para el desarrollo de aplicaciones distribuidas.
+La prueba es más difícil
+Los desarrolladores deben implementar el mecanismo de comunicación entre servicios.
+La implementación de casos de uso que abarcan múltiples servicios sin usar transacciones distribuidas es difícil
+La implementación de casos de uso que abarcan múltiples servicios requiere una coordinación cuidadosa entre los equipos
+Complejidad de implementación. En producción, también existe la complejidad operativa de implementar y gestionar un sistema compuesto por muchos tipos de servicios diferentes.
+Aumento del consumo de memoria. La arquitectura de microservicio reemplaza N instancias monolíticas de aplicaciones con instancias de servicios NxM. Si cada servicio se ejecuta en su propia JVM (o equivalente), que generalmente es necesaria para aislar las instancias, entonces hay una sobrecarga de M veces el número de tiempos de ejecución de JVM. Además, si cada servicio se ejecuta en su propia VM (por ejemplo, instancia EC2), como es el caso de Netflix, la sobrecarga es aún mayor.
+Cuestiones
+Hay muchos problemas que debe abordar.
+
+¿Cuándo usar la arquitectura de microservicio?
+Un desafío al usar este enfoque es decidir cuándo tiene sentido usarlo. Al desarrollar la primera versión de una aplicación, a menudo no tiene los problemas que este enfoque resuelve. Además, usar una arquitectura elaborada y distribuida ralentizará el desarrollo. Esto puede ser un problema importante para las startups cuyo mayor desafío es a menudo cómo evolucionar rápidamente el modelo de negocio y la aplicación que lo acompaña. El uso de divisiones del eje Y puede hacer que sea mucho más difícil iterar rápidamente. Más adelante, sin embargo, cuando el desafío es cómo escalar y necesita usar la descomposición funcional, las dependencias enredadas pueden dificultar la descomposición de su aplicación monolítica en un conjunto de servicios.
+
+¿Cómo descomponer la aplicación en servicios?
+Otro desafío es decidir cómo dividir el sistema en microservicios. Esto es mucho un arte, pero hay una serie de estrategias que pueden ayudar:
+
+Descompón por capacidad comercial y define los servicios correspondientes a las capacidades comerciales.
+Descomponer por subdominio de diseño impulsado por dominio .
+Descompón por verbo o caso de uso y define los servicios que son responsables de las acciones particulares. por ejemplo, uno Shipping Serviceque es responsable de enviar los pedidos completos.
+Descompóndelo por sustantivos o recursos definiendo un servicio que sea responsable de todas las operaciones en entidades / recursos de un tipo determinado. por ejemplo, un Account Serviceresponsable de administrar cuentas de usuario.
+Idealmente, cada servicio debe tener solo un pequeño conjunto de responsabilidades. (Tío) Bob Martin habla sobre el diseño de clases utilizando el Principio de Responsabilidad Individual (SRP) . El SRP define la responsabilidad de una clase como una razón para cambiar, y establece que una clase solo debe tener un motivo para cambiar. Tiene sentido aplicar el SRP al diseño del servicio también.
+
+Otra analogía que ayuda con el diseño del servicio es el diseño de las utilidades de Unix. Unix proporciona una gran cantidad de utilidades como grep, cat y find. Cada utilidad hace exactamente una cosa, a menudo excepcionalmente bien, y se puede combinar con otras utilidades utilizando un script de shell para realizar tareas complejas.
+
+¿Cómo mantener la consistencia de los datos?
+Para garantizar un acoplamiento flexible, cada servicio tiene su propia base de datos. Mantener la coherencia de los datos entre los servicios es un desafío porque 2 transacciones de compromiso de fase / distribución no son una opción para muchas aplicaciones. Una aplicación debe usar el patrón Saga . Un servicio publica un evento cuando sus datos cambian. Otros servicios consumen ese evento y actualizan sus datos. Hay varias maneras de actualizar de manera confiable eventos de publicación y datos, incluidos Event Sourcing y Transaction Log Tailing .
+
+¿Cómo implementar consultas?
+Otro desafío es implementar consultas que necesitan recuperar datos propiedad de múltiples servicios.
+
+Los patrones de Composición API y Segregación de Responsabilidad de Consulta de Comando (CQRS) .
+Patrones relacionados
+Hay muchos patrones relacionados con el patrón de microservicios. La arquitectura monolítica es una alternativa a la arquitectura de microservicio. Los otros patrones abordan los problemas que encontrará al aplicar la arquitectura de microservicio.
+
+ 
+
+Patrones de descomposición
+Descomponer por capacidad comercial
+Descomponer por subdominio
+El patrón de Base de datos por servicio describe cómo cada servicio tiene su propia base de datos para garantizar un acoplamiento flexible.
+El patrón API Gateway define cómo los clientes acceden a los servicios en una arquitectura de microservicio.
+Los Descubrimiento del lado del cliente y del descubrimiento del lado del servidor patrones se utilizan para enrutar las solicitudes para un cliente a una instancia de servicio disponible en una arquitectura microService.
+Los patrones de Invocación de mensajería y procedimiento remoto son dos formas diferentes en que los servicios se pueden comunicar.
+El servicio individual por host y los servicios múltiples por patrones de host son dos estrategias de implementación diferentes.
+Patrones de preocupaciones transversales: patrón de chasis de microservicio y configuración externalizada
+Patrones de prueba: prueba de componentes de servicio y prueba de contrato de integración de servicios
+Cortacircuitos
+Token de acceso
+Patrones de observabilidad:
+Agregación de registro
+Métricas de aplicación
+Registro de auditoría
+Trazado distribuido
+Seguimiento de excepciones
+API de comprobación de estado
+Registrar implementaciones y cambios
+Patrones de UI:
+Composición del fragmento de página del lado del servidor
+Composición de interfaz de usuario del lado del cliente
+Usos conocidos
+La mayoría de los sitios web a gran escala, incluidos Netflix , Amazon y eBay, han evolucionado desde una arquitectura monolítica a una arquitectura de microservicio.
+
+Netflix, que es un servicio de transmisión de video muy popular que es responsable de hasta el 30% del tráfico de Internet, tiene una arquitectura orientada a servicios a gran escala. Manejan más de mil millones de llamadas por día a su API de transmisión de video desde más de 800 tipos diferentes de dispositivos. Cada llamada API se expande a un promedio de seis llamadas a servicios de back-end.
+
+Amazon . com originalmente tenía una arquitectura de dos niveles. Para escalar, migraron a una arquitectura orientada a servicios que consta de cientos de servicios de backend. Varias aplicaciones llaman a estos servicios, incluidas las aplicaciones que implementan Amazon . com sitio web y la API del servicio web. El Amazon . La aplicación del sitio web com llama a 100-150 servicios para obtener los datos que solían construir una página web.
+
+El sitio de subastas ebay.com también evolucionó de una arquitectura monolítica a una arquitectura orientada a servicios. El nivel de aplicación consiste en múltiples aplicaciones independientes. Cada aplicación implementa la lógica comercial para un área de función específica, como comprar o vender. Cada aplicación utiliza divisiones del eje X y algunas aplicaciones como la búsqueda usan divisiones del eje Z. Ebay.com también aplica una combinación de escala de estilo X, Y y Z al nivel de la base de datos.eBay . com también evolucionó de una arquitectura monolítica a una arquitectura orientada a servicios. El nivel de aplicación consiste en múltiples aplicaciones independientes. Cada aplicación implementa la lógica comercial para un área de función específica, como comprar o vender. Cada aplicación utiliza divisiones del eje X y algunas aplicaciones como la búsqueda usan divisiones del eje Z. Ebay . com también aplica una combinación de escala de estilo X, Y y Z al nivel de la base de datos.
+
+Existen numerosos otros ejemplos de empresas que utilizan la arquitectura de microservicio.
+
+Ejemplos
+Chris Richardson tiene ejemplos de aplicaciones basadas en microservicios.
+
+Ver también
+Vea mi nota clave de Code Freeze 2018 , que proporciona una buena introducción a la arquitectura de microservicio.
