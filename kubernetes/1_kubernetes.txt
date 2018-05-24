@@ -1,0 +1,117 @@
+https://kubernetes.io/docs/user-journeys/users/application-developer/foundational/#section-3
+
+Comprender la arquitectura básica de Kubernetes
+
+Como desarrollador de aplicaciones, no necesita saber todo sobre el funcionamiento interno de Kubernetes, pero puede resultarle útil comprenderlo a un alto nivel.
+
+Lo que Kubernetes ofrece
+Digamos que su equipo está implementando una aplicación de Rails común. Ha realizado algunos cálculos y ha determinado que necesita cinco instancias de su aplicación en ejecución en un momento dado para gestionar el tráfico externo.
+
+Si no está ejecutando Kubernetes o un sistema automatizado similar, es posible que le resulte familiar la siguiente situación:
+
+
+Una instancia de su aplicación (una instancia completa de la máquina o simplemente un contenedor) se cae.
+
+Debido a que su equipo tiene una configuración de monitoreo, esta pagina a la persona de guardia.
+
+La persona de turno debe ingresar, investigar y girar manualmente una nueva instancia.
+
+Dependiendo de cómo su equipo maneje DNS / red, la persona de guardia también puede necesitar actualizar también el mecanismo de descubrimiento de servicio para apuntar a la IP de la nueva instancia de Rails en lugar de a la anterior.
+
+
+
+Este proceso puede ser tedioso e inconveniente, especialmente si (2) ocurre en las primeras horas de la mañana.
+
+Sin embargo, si tiene Kubernetes configurado, la intervención manual no es tan necesaria. El plano de control de Kubernetes , que se ejecuta en el nodo maestro de su clúster, maneja con gracia (3) y (4) en su nombre. Como resultado, Kubernetes a menudo se conoce como un sistema de autocuración .
+
+Hay dos partes clave del plano de control que facilitan este comportamiento: el servidor API de Kubernetes y los Controladores .
+
+Servidor API Kubernetes
+Para que Kubernetes sea útil, necesita saber qué tipo de estado de clúster desea que mantenga. Sus archivos de configuración YAML o JSON declaran este estado deseado en términos de uno o más objetos API, como Implementaciones . Para realizar actualizaciones en el estado de su clúster, envíe estos archivos a la API de Kubernetes. servidor ( kube-apiserver).
+
+Los ejemplos de estado incluyen pero no están limitados a lo siguiente:
+
+Las aplicaciones u otras cargas de trabajo para ejecutar
+Las imágenes del contenedor para sus aplicaciones y cargas de trabajo
+Asignación de recursos de red y disco
+Tenga en cuenta que el servidor API es solo la puerta de enlace y que los datos de los objetos se almacenan realmente en un almacén de datos de alta disponibilidad llamado etcd . Sin embargo, para la mayoría de los propósitos, puedes enfocarte en el servidor API. La mayoría de las lecturas y escrituras en el estado del clúster tienen lugar como solicitudes API.
+
+Puedes leer más sobre la API de Kubernetes aquí .
+
+Controladores
+Una vez que haya declarado su estado deseado a través de la API de Kubernetes, los controladores trabajan para que el estado actual del clúster coincida con este estado deseado.
+
+Los procesos del controlador estándar son kube-controller-managery cloud-controller-manager, pero también puede escribir sus propios controladores.
+
+Todos estos controladores implementan un bucle de control . Para simplificar, puedes pensar en esto de la siguiente manera:
+
+¿Cuál es el estado actual del clúster (X)?
+
+¿Cuál es el estado deseado del grupo (Y)?
+
+X == Y?
+
+true - Hacer nada.
+false- Realizar tareas para llegar a Y, como iniciar o reiniciar contenedores, o escalar el número de réplicas de una aplicación determinada. Regrese a 1.
+Mediante bucle continuo, estos controladores garantizan que el clúster pueda recoger nuevas actualizaciones y evitar derivar del estado deseado. Estas ideas se tratan con más detalle aquí .
+
+
+
+
+
+https://kubernetes.io/docs/concepts/
+
+Conceptos
+Visión de conjunto
+Objetos de Kubernetes
+Plano de control de Kubernetes
+Kubernetes Master
+Nodos de Kubernetes
+Metadatos de objeto
+Que sigue
+La sección Conceptos te ayuda a aprender sobre las partes del sistema de Kubernetes y las abstracciones que Kubernetes usa para representar tu clúster, y te ayuda a obtener una comprensión más profunda de cómo funciona Kubernetes.
+
+Visión de conjunto
+Para trabajar con Kubernetes, utiliza los objetos API de Kubernetes para describir el estado deseado de su clúster : qué aplicaciones u otras cargas de trabajo desea ejecutar, qué imágenes de contenedor utilizan, la cantidad de réplicas, qué red y recursos de disco desea que estén disponibles, y Más. Establece su estado deseado mediante la creación de objetos utilizando la API de Kubernetes, normalmente a través de la interfaz de línea de comandos kubectl. También puede usar la API de Kubernetes directamente para interactuar con el clúster y establecer o modificar su estado deseado.
+
+Una vez que haya establecido el estado deseado, el plano de control de Kubernetes funciona para hacer que el estado actual del clúster coincida con el estado deseado. Para hacerlo, Kubernetes realiza una variedad de tareas automáticamente, como iniciar o reiniciar contenedores, escalar el número de réplicas de una aplicación determinada y más. El plano de control de Kubernetes consiste en una colección de procesos que se ejecutan en su clúster:
+
+El Kubernetes Maestro es una colección de tres procesos que se ejecutan en un solo nodo en el clúster, que se designa como el nodo maestro. Esos procesos son: kube-apiserver , kube-controller-manager y kube-scheduler .
+Cada nodo no maestro individual en su clúster ejecuta dos procesos:
+kubelet , que se comunica con el Maestro de Kubernetes.
+kube-proxy , un proxy de red que refleja los servicios de red de Kubernetes en cada nodo.
+Objetos de Kubernetes
+Kubernetes contiene una serie de abstracciones que representan el estado de su sistema: aplicaciones en contenedor desplegadas y cargas de trabajo, sus recursos de red y disco asociados, y otra información sobre lo que está haciendo su clúster. Estas abstracciones están representadas por objetos en la API de Kubernetes; vea la descripción de Objetos de Kubernetes para más detalles.
+
+Los objetos básicos de Kubernetes incluyen:
+
+Vaina
+Servicio
+Volumen
+Espacio de nombre
+Además, Kubernetes contiene una serie de abstracciones de alto nivel llamadas Controladores. Los controladores se basan en los objetos básicos y proporcionan funcionalidad adicional y funciones de conveniencia. Incluyen:
+
+ReplicaSet
+Despliegue
+StatefulSet
+DaemonSet
+Trabajo
+Plano de control de Kubernetes
+Las diversas partes del plano de control de Kubernetes, como Kubernetes Master y los procesos kubelet, regulan la forma en que Kubernetes se comunica con su clúster. El plano de control mantiene un registro de todos los objetos de Kubernetes en el sistema y ejecuta bucles de control continuo para administrar el estado de esos objetos. En cualquier momento dado, los circuitos de control del plano de control responderán a los cambios en el clúster y trabajarán para que el estado real de todos los objetos en el sistema coincida con el estado deseado que usted proporcionó.
+
+Por ejemplo, cuando usa la API de Kubernetes para crear un objeto de Implementación, proporciona un nuevo estado deseado para el sistema. El plano de control de Kubernetes registra la creación de objetos y lleva a cabo sus instrucciones iniciando las aplicaciones requeridas y programándolas en nodos del clúster, haciendo que el estado actual del clúster coincida con el estado deseado.
+
+Kubernetes Master
+El maestro de Kubernetes es responsable de mantener el estado deseado para su clúster. Cuando interactúas con Kubernetes, como al utilizar la kubectlinterfaz de línea de comandos, te estás comunicando con el maestro Kubernetes de tu clúster.
+
+El "maestro" se refiere a una colección de procesos que gestionan el estado del clúster. Normalmente, todos estos procesos se ejecutan en un solo nodo en el clúster, y este nodo también se conoce como el maestro. El maestro también se puede replicar para disponibilidad y redundancia.
+
+Nodos de Kubernetes
+Los nodos en un clúster son las máquinas (máquinas virtuales, servidores físicos, etc.) que ejecutan sus aplicaciones y flujos de trabajo en la nube. El maestro de Kubernetes controla cada nodo; rara vez interactuarás con nodos directamente.
+
+Metadatos de objeto
+Anotaciones
+Que sigue
+Si desea escribir una página conceptual, consulte Uso de plantillas de página para obtener información sobre el tipo de página conceptual y la plantilla conceptual.
+
+
