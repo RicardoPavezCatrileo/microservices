@@ -1,0 +1,32 @@
+https://www.genbetadev.com/bases-de-datos/nosql-clasificacion-de-las-bases-de-datos-segun-el-teorema-cap
+
+NoSQL: clasificación de las bases de datos según el teorema CAP
+
+En el anterior post hablábamos de los distintos tipos de bases de datos NoSQL. Como ya comentábamos, estas bases de datos son muy distintas de las bases de datos relacionales. Y además pueden ser muy distintas entre sí.
+
+Aunque conocer el tipo de modelo de datos es importante, también hay que tener en cuenta otros factores. Las bases de datos NoSQL están pensadas para ser escalables y distribuidas. Y por ser distribuidas tendremos que tener en cuenta el teorema CAP.
+
+El teorema CAP
+El teorema CAP o teorema Brewer, dice que en sistemas distribuidos es imposible garantizar a la vez: consistencia, disponibilidad y tolerancia a particiones (Consistency-Availability-Partition Tolerance). Veamos qué son estas características:
+
+Consistencia: al realizar una consulta o inserción siempre se tiene que recibir la misma información, con independencia del nodo o servidor que procese la petición.
+Disponibilidad: que todos los clientes puedan leer y escribir, aunque se haya caído uno de los nodos.
+Tolerancia a particiones: a veces traducido como tolerancia a fallos. Es una traducción que no me gusta, ya que se confunde con el punto anterior. Los sistemas distribuidos pueden estar divididos en particiones (generalmente de forma geográfica). Así que esta condición implica, que el sistema tiene que seguir funcionando aunque existan fallos o caídas parciales que dividan el sistema.
+
+
+Clasificación de cada base de datos NoSQL según el teorema CAP
+Para ser escalables y distribuidas, las bases de datos NoSQL, siguen distintos métodos, por lo que no todas cumplen los mismos puntos del teorema CAP.
+
+En la imagen que encabeza el artículo, podemos ver cómo se reparten algunas de las bases de datos según las condiciones que cumplen del teorema CAP.
+
+AP: garantizan disponibilidad y tolerancia a particiones, pero no la consistencia, al menos de forma total. Algunas de ellas consiguen una consistencia parcial a través de la replicación y la verificación.
+CP: garantizan consistencia y tolerancia a particiones. Para lograr la consistencia y replicar los datos a través de los nodos, sacrifican la disponibilidad.
+CA: garantizan consistencia y disponibilidad, pero tienen problemas con la tolerancia a particiones. Este problema lo suelen gestionar replicando los datos.
+Hay que tener en cuenta, que esta clasificación no es definitiva, ya que algunos de estos sistemas NoSQL pueden configurarse para cambiar su comportamiento.
+
+Por ejemplo MongoDB es CP por defecto. Pero también podemos configurar el nivel de consistencia, eligiendo el número de nodos a los que se replicarán los datos. O podemos configurar si se pueden leer datos de los nodos secundarios (en MongoDB solo hay un servidor principal, que es el único que acepta inserciones o modificaciones). Si permitimos leer de un nodo secundario, sacrificamos consistencia, pero ganamos disponibilidad.
+
+Por tanto, además de pensar en el tipo de base de datos NoSQL que se mejor se adapta a nuestro modelo de datos, también tendremos que pensar en su funcionamiento. Así podremos conseguir que nuestra aplicación funcione de la mejor manera posible.
+
+
+
