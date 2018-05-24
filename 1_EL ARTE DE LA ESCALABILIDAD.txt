@@ -1,0 +1,11 @@
+EL ARTE DE LA ESCALABILIDAD (http://theartofscalability.com/)
+Arquitectura web escalable, procesos y 
+organizaciones para la empresa moderna
+
+LA IMPORTANCIA DE LA ESCALABILIDAD
+
+Resumen del libro por Abbott y Fisher (2:22)
+Descubra por qué The Art of Scalability se ha convertido en la guía de escalabilidad de autoría:
+El arte de escalabilidad enseña a ejecutivos de tecnología, ingenieros y arquitectos cómo resolver problemas de escalabilidad de tecnología a través de cambios en su arquitectura, procesos y estructura de organización. El libro ofrece un conjunto de modelos y enfoques que ayudan a la gestión de back office, servicios web y otras plataformas. En lugar de centrarse en la optimización y ajuste de los sistemas existentes, el libro ofrece modelos desarrollados por los autores para ayudar a las empresas a repensar su arquitectura tecnológica.
+
+Hay tres problemas que las empresas de tecnología de hiper crecimiento a menudo experimentan. El primer problema es el tiempo de inactividad de su sitio que potencialmente cuesta millones de dólares. Este tiempo de inactividad con mayor frecuencia es el resultado de una arquitectura que no aumenta la demanda a medida que las transacciones del consumidor crecen a un ritmo cada vez mayor. El segundo problema es una falla en la empresa y en el proceso de la organización para corregir rápidamente no solo los problemas de disponibilidad actuales, sino también las necesidades a más largo plazo para la escala futura. El tercer problema es la falla de la organización para corregir las interrupciones y los procesos que resultan en un mayor gasto de tiempo en fallas tecnológicas y cada vez menos tiempo en nuevos productos y características. El arte de escalabilidad enseña al lector cómo resolver estos tres problemas de escalabilidad de tecnología.
